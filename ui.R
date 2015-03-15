@@ -10,13 +10,13 @@ library(shiny)
 shinyUI(fluidPage(
   
   # Application title
-  titlePanel("Simulation of Disease Outbreak in a Population"),
+  titlePanel("Disease Outbreak in Population"),
   
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
       sliderInput("iteration",
-                  "Number of iterations:", min = 1, max = 20, value = 1, animate = animationOptions(interval = 1250, loop = FALSE)),
+                  "Number of iterations:", min = 1, max = 79, value = 1, animate = animationOptions(interval = 1250, loop = FALSE)),
       br(),
       wellPanel(
         helpText("Probabilities per iteration:"),

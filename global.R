@@ -20,8 +20,6 @@ fetchDB <- function(dbTable){
 }
 #---------------------------------------------------------------------------------------------------------------------#
 
-#DT <- fetchDB('himss_test')
-
 #---------------------------------------------------------------------------------------------------------------------#
 # function to process data.table read from Vertica DB
 processDT <- function(DT, simulate = FALSE, addXY = TRUE){
@@ -125,7 +123,8 @@ Bo <- function(DT){
   DT.tmp <- copy(DT)
   
   # delete unwanted columns
-  cols <- c(1, 2, DT[, grep("level", colnames(DT))], DT[, grep("change", colnames(DT))])
+  cols <- c(DT.tmp[, grep("^x$", colnames(DT.tmp))], DT.tmp[, grep("^y$", colnames(DT.tmp))], 
+            DT.tmp[, grep("level", colnames(DT.tmp))], DT.tmp[, grep("change", colnames(DT.tmp))])
   DT.tmp[, (cols) := NULL]
   
   vec <- vector()
@@ -133,7 +132,7 @@ Bo <- function(DT){
   for (i in 1:6) vec[i] <- DT.tmp[, sum(HS.1==i)]
   tmp <- rbindlist(list(tmp, as.list(vec)))
   
-  for(i in 2:ncol(DT.tmp)){
+  for(i in 2:(ncol(DT.tmp)-1)){
     for(j in 1:6) vec[j] <- DT.tmp[, sum(eval(parse(text = paste0('HS.', i))) == j )]
     tmp <- rbindlist(list(tmp, as.list(vec)))    
   }
@@ -176,10 +175,10 @@ makePlot <- function(DT, level = 1){
 #---------------------------------------------------------------------------------------------------------------------#
 
 #---------------------------------------------------------------------------------------------------------------------#
-linePlot <- function(DT){
+linePlot <- function(DT, xmin, xmax){
   trend <- melt(Bo(DT), id = 'iter')
   pline <- ggplot(trend, aes(x = iter, y = value, col = variable)) + geom_point() + geom_line() + theme_bw()
-  pline <- pline + theme(legend.position = "bottom") + xlim(1,30) + xlab("Iteration") + ylab("Count")
+  pline <- pline + theme(legend.position = "bottom") + xlim(xmin, xmax) + xlab("Iteration") + ylab("Count")
   pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
                                aes(fill = variable), alpha = 0.115, lty = 2) + facet_wrap(~ variable)
   pline <- pline + commonTheme
@@ -202,7 +201,7 @@ trendPlot <- function(DT){
   pop.tmp.long[, time := rep(seq(1, ncol(pop.tmp)-1), each = 3)]
   
   p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1.25) + geom_point(size = 4) + theme_bw()
-  p2 <- p2 + theme(legend.position = "bottom") + ylab("Percentage of Populatoin\n") + xlab("\nTime (Hours)")
+  p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime (Hours)")
   p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
   p2 <- p2 + commonTheme
   p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Healthy", "Infectious", "Symptomatic"),

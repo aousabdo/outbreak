@@ -1,10 +1,3 @@
-
-# This is the server logic for a Shiny web application.
-# You can find out more about building applications with Shiny here:
-#
-# http://shiny.rstudio.com
-#
-
 library(shiny)
 
 shinyServer(function(input, output) {
@@ -19,23 +12,30 @@ shinyServer(function(input, output) {
     
     return(population)
   })
-
+  
+  # read database and create HS table
   dbDT <- reactive({
     return(fetchDB('himss_test'))
   })
   
+  DTProcessed <- reactive({
+    return(processDT(dbDT(), simulate = T))
+  })
+    
   output$outbreakPlot <- renderPlot({
-    # simPop <- dataTable()
-    simPop <- processDT(dbDT(), simulate = F)
-    makePlot(DT = simPop, level = input$iteration)
+    population <- DTProcessed()
+    makePlot(DT = population, level = input$iteration) #length(population[, grep("HS.", colnames(population))])
+    
   })
   
   output$linePlot <- renderPlot({
-    linePlot(dataTable())
+    population <- DTProcessed() 
+    linePlot(population, xmin = 1, xmax = 100)
   })
   
   output$trendPlot <- renderPlot({
-    trendPlot(dataTable())
+    population <- DTProcessed() 
+    trendPlot(population)
   })
   
 })
