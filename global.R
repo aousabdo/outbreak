@@ -3,6 +3,8 @@ library(Hmisc)
 library(ggplot2)
 library(reshape2)
 library(RJDBC)
+library(RColorBrewer)
+library(scales)
 
 #---------------------------------------------------------------------------------------------------------------------#
 # function to read data from database
@@ -184,11 +186,19 @@ makePlot <- function(DT, level = 1){
 #---------------------------------------------------------------------------------------------------------------------#
 linePlot <- function(DT, xmin, xmax){
   trend <- melt(Bo(DT), id = 'iter')
+  
   pline <- ggplot(trend, aes(x = iter, y = value, col = variable)) + geom_point() + geom_line() + theme_bw()
-  pline <- pline + theme(legend.position = "bottom") + xlim(xmin, xmax) + xlab("Time (Hours)") + ylab("Count")
+  pline <- pline + theme(legend.position = "bottom") + xlim(xmin, xmax) + xlab("\nTime (Hours)") + ylab("Count")
   pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
                                aes(fill = variable), alpha = 0.115, lty = 2) + facet_wrap(~ variable)
-  pline <- pline + commonTheme
+  pline <- pline + scale_color_manual(name = "", breaks = paste0('HS.', 1:6),
+                                      values = c("#30AC30", "#217821", "#FFCC00", "#cca300", "#FF3030", "#661313"), 
+                                      labels = paste0('Health Status ', 1:6, ' '))
+  # now get rid of the other legend
+  pline <- pline + scale_fill_manual(name = "", breaks = paste0('HS.', 1:6),
+                                      values = rep(c("#30AC30", "#FFCC00", "#FF3030"), each = 2), 
+                                      labels = paste0('HS.', 1:6), guide = FALSE)
+  pline <- pline + commonTheme + guides(colour = guide_legend(nrow = 2))
   print(pline)
 }
 
