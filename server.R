@@ -30,13 +30,11 @@ shinyServer(function(input, output) {
   })
   
   output$linePlot <- renderPlot({
-    population <- DTProcessed() 
-    linePlot(population, xmin = 1, xmax = 100)
+    linePlot(dbDT(), xmin = 1, xmax = 100)
   })
   
   output$trendPlot <- renderPlot({
-    population <- DTProcessed() 
-    trendPlot(population)
+    trendPlot(dbDT())
   })
   
 })

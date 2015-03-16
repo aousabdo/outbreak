@@ -189,10 +189,13 @@ makePlot <- function(DT, level = 1){
 
 #---------------------------------------------------------------------------------------------------------------------#
 linePlot <- function(DT, xmin, xmax){
-  trend <- melt(Bo(DT), id = 'iter')
+  DTW <- processDT(DT, simulate = TRUE, addXY = TRUE)
+  trend <- melt(Bo(DTW), id = 'iter')
   
-  pline <- ggplot(trend, aes(x = iter, y = value, col = variable)) + geom_point() + geom_line() + theme_bw()
-  pline <- pline + theme(legend.position = "bottom") + xlim(xmin, xmax) + xlab("\nTime (Hours)") + ylab("Count")
+  trend[, time := as.POSIXct(DT[, unique(health_status_snapshot_date)])]
+  
+  pline <- ggplot(trend, aes(x = time, y = value, col = variable)) + geom_point() + geom_line() + theme_bw()
+  pline <- pline + theme(legend.position = "bottom") + xlab("\nTime (Hours)") + ylab("Count")
   pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
                                aes(fill = variable), alpha = 0.115, lty = 2) + facet_wrap(~ variable)
   pline <- pline + scale_color_manual(name = "", breaks = paste0('HS.', 1:6),
@@ -203,6 +206,7 @@ linePlot <- function(DT, xmin, xmax){
                                      values = rep(c("#30AC30", "#FFCC00", "#FF3030"), each = 2), 
                                      labels = paste0('HS.', 1:6), guide = FALSE)
   pline <- pline + commonTheme + guides(colour = guide_legend(nrow = 2))
+  pline <- pline + theme(axis.text.x = element_text(angle = 90, hjust = 1))
   print(pline)
 }
 
@@ -213,16 +217,18 @@ linePlot <- function(DT, xmin, xmax){
 # -------------------------------------------------------------------------------------#
 
 #---------------------------------------------------------------------------------------------------------------------#
-trendPlot <- function(DT){ 
-  pop.tmp <- DT[, lapply(.SD, summaryFun), .SDcols = DT[ , grep("level", colnames(DT)) ]]
+trendPlot <- function(DT){
+  DTW <- processDT(DT, simulate = TRUE, addXY = TRUE)
+  pop.tmp <- DTW[, lapply(.SD, summaryFun), .SDcols = DTW[ , grep("level", colnames(DTW)) ]]
   pop.tmp[, reference := c("Healthy", "Symptomatic", "Infectious")]
   setkey(pop.tmp, reference)
   
   pop.tmp.long <- melt(pop.tmp, id.vars = "reference")
-  pop.tmp.long[, time := rep(seq(1, ncol(pop.tmp)-1), each = 3)]
-  
+  # pop.tmp.long[, time := rep(seq(1, ncol(pop.tmp)-1), each = 3)]
+  pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)]), each = 3)]
+
   p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1.25) + geom_point(size = 4) + theme_bw()
-  p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime (Hours)")
+  p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
   p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
   p2 <- p2 + commonTheme
   p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
