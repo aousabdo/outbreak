@@ -19,6 +19,7 @@ shinyServer(function(input, output) {
   })
   
   DTProcessed <- reactive({
+    set.seed(123)
     return(processDT(dbDT(), simulate = T))
   })
     
