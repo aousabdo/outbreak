@@ -153,7 +153,8 @@ Bo <- function(DT){
 #---------------------------------------------------------------------------------------------------------------------#
 makePlot <- function(DT, level = 1){
   set.seed(123)
-  population <<- copy(DT)
+  DTW <- processDT(DT, simulate = TRUE, addXY = TRUE)
+  population <- copy(DTW)
   
   Level <- paste('level', level, sep=".")
   Change <- paste('change', level , level-1 , sep="_")
@@ -183,6 +184,8 @@ makePlot <- function(DT, level = 1){
   p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
                              labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
                              values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
+  label <- as.POSIXct(DT[, unique(health_status_snapshot_date)])[level]
+  p <- p + annotate("text", x = 3, y = 6.5, label = as.character(label), size = 8, col = "steelblue")
   print(p)
 }
 #---------------------------------------------------------------------------------------------------------------------#
