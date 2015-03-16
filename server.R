@@ -35,8 +35,7 @@ shinyServer(function(input, output) {
   })
   
   output$trendPlot <- renderPlot({
-    population <- DTProcessed() 
-    trendPlot(population)
+    trendPlot(dbDT())
   })
   
 })
