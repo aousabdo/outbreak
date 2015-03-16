@@ -155,8 +155,10 @@ makePlot <- function(DT, level = 1){
   p <- ggplot(population, aes(x = x, y = y))
   p <- p + geom_point(aes_string(fill = Level), shape = 21, size = 12, col = "white") 
   if(level >= 2){
+    # here we add the circles Bo wanted
+    # make sure legned is not displayed, this is done with the guide = FALSE line
     p <- p + geom_point(shape = 21, aes_string(col = Change), size = 14)
-    p <- p + scale_color_manual(values=c("Recovery" = "black","Sicker" = "white","Steady" = "white"))
+    p <- p + scale_color_manual(values=c("Recovery" = "black","Sicker" = "white","Steady" = "white"), guide = FALSE)
   }
   p <- p + theme(axis.line=element_blank(),
                  axis.text.x=element_blank(),
@@ -164,12 +166,17 @@ makePlot <- function(DT, level = 1){
                  axis.ticks=element_blank(),
                  axis.title.x=element_blank(),
                  axis.title.y=element_blank(),
-                 legend.position="none",
+                 legend.position="bottom",
                  panel.grid.major=element_blank(),
                  panel.background = element_rect(fill = "#F0F0F0", colour = "grey50", size = 2),
-                 panel.grid.minor=element_blank()
+                 panel.grid.minor=element_blank(),
+                 legend.title = element_text(colour="black", size=16, face="bold"),
+                 legend.text = element_text(colour="black", size = 16, face = "bold")
   )
-  p <- p + scale_fill_manual(values=c("#30AC30", "#FF3030", "#FFCC00"))
+  # p <- p + scale_fill_manual(values=c("#30AC30", "#FF3030", "#FFCC00"))
+  p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Infectious", "Symptomatic"),
+                             labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
+                             values = c("Healthy" = "#30AC30", "Symptomatic" = "#FF3030", "Infectious" = "#FFCC00"))
   print(p)
 }
 #---------------------------------------------------------------------------------------------------------------------#
@@ -178,7 +185,7 @@ makePlot <- function(DT, level = 1){
 linePlot <- function(DT, xmin, xmax){
   trend <- melt(Bo(DT), id = 'iter')
   pline <- ggplot(trend, aes(x = iter, y = value, col = variable)) + geom_point() + geom_line() + theme_bw()
-  pline <- pline + theme(legend.position = "bottom") + xlim(xmin, xmax) + xlab("Iteration") + ylab("Count")
+  pline <- pline + theme(legend.position = "bottom") + xlim(xmin, xmax) + xlab("Time (Hours)") + ylab("Count")
   pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
                                aes(fill = variable), alpha = 0.115, lty = 2) + facet_wrap(~ variable)
   pline <- pline + commonTheme
