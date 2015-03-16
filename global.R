@@ -13,8 +13,8 @@ fetchDB <- function(dbTable){
   BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="C:/Users/abdoa/Downloads/vertica-jdbc-7.1.1-0.jar")
   himss <- dbConnect(BDDE_himss, "jdbc:vertica://localhost/BDDE_himss", username = dbTable, password = "vertica")
   
-#   BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="~shiny2/vertica-jdbc-7.1.1-0.jar")
-#   himss <- dbConnect(BDDE_himss, "jdbc:vertica://206.164.65.108/BDDE_himss", username = dbTable, password = "vertica")
+  #   BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="~shiny2/vertica-jdbc-7.1.1-0.jar")
+  #   himss <- dbConnect(BDDE_himss, "jdbc:vertica://206.164.65.108/BDDE_himss", username = dbTable, password = "vertica")
   
   # read snapshot health status table as a data.tble
   DT <- fetch(dbSendQuery(himss, "SELECT * FROM health_status_snapshot WHERE participant_id >= 170"), n = -1)
@@ -59,8 +59,9 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE){
     DTW[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket))]
   }
   
-  DTW[, c("x", "y") := list(x = rep(1:5, each = 6), y = 1:6)]
-  
+  if(addXY){
+    DTW[, c("x", "y") := list(x = rep(1:5, each = 6), y = 1:6)]
+  }
   return(DTW)
 }
 #---------------------------------------------------------------------------------------------------------------------#
@@ -179,7 +180,7 @@ makePlot <- function(DT, level = 1){
                  legend.text = element_text(colour="black", size = 16, face = "bold")
   )
   # p <- p + scale_fill_manual(values=c("#30AC30", "#FF3030", "#FFCC00"))
-  p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Infectious", "Symptomatic"),
+  p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
                              labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
                              values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
   print(p)
@@ -199,8 +200,8 @@ linePlot <- function(DT, xmin, xmax){
                                       labels = paste0('Health Status ', 1:6, ' '))
   # now get rid of the other legend
   pline <- pline + scale_fill_manual(name = "", breaks = paste0('HS.', 1:6),
-                                      values = rep(c("#30AC30", "#FFCC00", "#FF3030"), each = 2), 
-                                      labels = paste0('HS.', 1:6), guide = FALSE)
+                                     values = rep(c("#30AC30", "#FFCC00", "#FF3030"), each = 2), 
+                                     labels = paste0('HS.', 1:6), guide = FALSE)
   pline <- pline + commonTheme + guides(colour = guide_legend(nrow = 2))
   print(pline)
 }
@@ -224,7 +225,7 @@ trendPlot <- function(DT){
   p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime (Hours)")
   p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
   p2 <- p2 + commonTheme
-  p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Healthy", "Infectious", "Symptomatic"),
+  p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
                                  labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
                                  values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
   print(p2)
