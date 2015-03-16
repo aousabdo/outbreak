@@ -24,8 +24,7 @@ shinyServer(function(input, output) {
   })
     
   output$outbreakPlot <- renderPlot({
-    population <- DTProcessed()
-    makePlot(DT = population, level = input$iteration) #length(population[, grep("HS.", colnames(population))])
+    makePlot(DT = dbDT(), level = input$iteration) #length(population[, grep("HS.", colnames(population))])
     
   })
   
