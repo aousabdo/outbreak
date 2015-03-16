@@ -5,6 +5,7 @@ library(reshape2)
 library(RJDBC)
 library(RColorBrewer)
 library(scales)
+library(gridExtra)
 
 #---------------------------------------------------------------------------------------------------------------------#
 # function to read data from database
@@ -185,7 +186,9 @@ makePlot <- function(DT, level = 1){
                              labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
                              values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
   label <- as.POSIXct(DT[, unique(health_status_snapshot_date)])[level]
-  p <- p + annotate("text", x = 3, y = 6.5, label = as.character(label), size = 8, col = "steelblue")
+  # p <- p + annotate("text", x = 3, y = 6.5, label = as.character(label), size = 8, col = "steelblue")
+  p <- arrangeGrob(p, sub = textGrob(as.character(label), x = 0, hjust = -0.1, vjust=0.1, 
+                                         gp = gpar(fontface = "italic", fontsize = 20)))
   print(p)
 }
 #---------------------------------------------------------------------------------------------------------------------#
