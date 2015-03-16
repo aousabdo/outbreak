@@ -178,7 +178,7 @@ makePlot <- function(DT, level = 1){
   # p <- p + scale_fill_manual(values=c("#30AC30", "#FF3030", "#FFCC00"))
   p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Infectious", "Symptomatic"),
                              labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
-                             values = c("Healthy" = "#30AC30", "Symptomatic" = "#FF3030", "Infectious" = "#FFCC00"))
+                             values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
   print(p)
 }
 #---------------------------------------------------------------------------------------------------------------------#
@@ -223,7 +223,7 @@ trendPlot <- function(DT){
   p2 <- p2 + commonTheme
   p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Healthy", "Infectious", "Symptomatic"),
                                  labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
-                                 values = c("Healthy" = "#30AC30", "Symptomatic" = "#FF3030", "Infectious" = "#FFCC00"))
+                                 values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
   print(p2)
 }
 #---------------------------------------------------------------------------------------------------------------------#
