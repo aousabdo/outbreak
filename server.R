@@ -22,8 +22,10 @@ shinyServer(function(input, output) {
     set.seed(123)
     return(processDT(dbDT(), simulate = T))
   })
-    
+  
   output$outbreakPlot <- renderPlot({
+    if (is.null(input$hours))
+      return(NULL)
     makePlot(DT = dbDT(), DTW = DTProcessed(), level = input$hours)
     
   })
