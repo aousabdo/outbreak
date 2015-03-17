@@ -11,11 +11,11 @@ library(gridExtra)
 # function to read data from database
 fetchDB <- function(dbTable){
   #Establish connection to Vertica DB
-  BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="C:/Users/abdoa/Downloads/vertica-jdbc-7.1.1-0.jar")
-  himss <- dbConnect(BDDE_himss, "jdbc:vertica://localhost/BDDE_himss", username = dbTable, password = "vertica")
+ BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="C:/Users/abdoa/Downloads/vertica-jdbc-7.1.1-0.jar")
+ himss <- dbConnect(BDDE_himss, "jdbc:vertica://localhost/BDDE_himss", username = dbTable, password = "vertica")
   
-  #   BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="~shiny2/vertica-jdbc-7.1.1-0.jar")
-  #   himss <- dbConnect(BDDE_himss, "jdbc:vertica://206.164.65.108/BDDE_himss", username = dbTable, password = "vertica")
+     # BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="~shiny2/vertica-jdbc-7.1.1-0.jar")
+     # himss <- dbConnect(BDDE_himss, "jdbc:vertica://206.164.65.108/BDDE_himss", username = dbTable, password = "vertica")
   
   # read snapshot health status table as a data.tble
   DT <- fetch(dbSendQuery(himss, "SELECT * FROM health_status_snapshot WHERE participant_id >= 170"), n = -1)
@@ -134,9 +134,9 @@ factorize <- function(x){
 #---------------------------------------------------------------------------------------------------------------------#
 
 #---------------------------------------------------------------------------------------------------------------------#
-Bo <- function(DT){
+Bo <- function(DTW){
   
-  DT.tmp <- copy(DT)
+  DT.tmp <- copy(DTW)
   
   # delete unwanted columns
   cols <- c(DT.tmp[, grep("^x$", colnames(DT.tmp))], DT.tmp[, grep("^y$", colnames(DT.tmp))], 
