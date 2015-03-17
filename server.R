@@ -24,16 +24,16 @@ shinyServer(function(input, output) {
   })
     
   output$outbreakPlot <- renderPlot({
-    makePlot(DT = dbDT(), level = input$iteration) #length(population[, grep("HS.", colnames(population))])
+    makePlot(DT = dbDT(), DTW = DTProcessed(), level = input$iteration)
     
   })
   
   output$linePlot <- renderPlot({
-    linePlot(dbDT(), xmin = 1, xmax = 100)
+    linePlot(DT = dbDT(), DTW = DTProcessed(), xmin = 1, xmax = 100)
   })
   
   output$trendPlot <- renderPlot({
-    trendPlot(dbDT())
+    trendPlot(DT = dbDT(), DTW = DTProcessed())
   })
   
 })
