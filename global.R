@@ -255,11 +255,45 @@ trendPlot <- function(DT, DTW){
 #---------------------------------------------------------------------------------------------------------------------#
 
 #---------------------------------------------------------------------------------------------------------------------#
+trendPlot2 <- function(DT, DTW){
+  # apply pre defined summary function to aggregate the change columns
+  pop.tmp <- DTW[, lapply(.SD, summaryFun2), .SDcols = DTW[ , grep("change", colnames(DTW)) ]]
+  # add column for reference
+  pop.tmp[, reference := as.factor(c("Recovery", "Sicker", "Steady"))]
+  setkey(pop.tmp, reference)
+  
+  # convert into long format
+  pop.tmp.long <- melt(pop.tmp, id.vars = "reference")
+  # notice that since the "change" variable is less by 1 compared to the nubmer of participants
+  # we have to exclude the first time stamp, i.e. first change starts with the introduction of 
+  # the second participant
+  pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)][-1]), each = 3)]
+  
+  p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1.25) + geom_point(size = 4) + theme_bw()
+  p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
+  p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
+  p2 <- p2 + commonTheme
+  p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Recovery", "Sicker", "Steady"),
+                                 labels =  c("Recovery", "Sicker", "Steady"),
+                                 values = c("Recovery" = "#30AC30", "Sicker" = "#FF3030", "Steady" = "gray"))
+  print(p2)
+}
+#---------------------------------------------------------------------------------------------------------------------#
+
+#---------------------------------------------------------------------------------------------------------------------#
 summaryFun <- function(x){
   tmp <- summary(x)
   if(is.na(tmp["Healthy"])){tmp["Healthy"] <- 0}
   if(is.na(tmp["Symptomatic"])){tmp["Symptomatic"] <- 0}
   if(is.na(tmp["Infectious"])){tmp["Infectious"] <- 0}
+  return(tmp)
+}
+
+summaryFun2 <- function(x){
+  tmp <- summary(x)
+  if(is.na(tmp["Recovery"])){tmp["Recovery"] <- 0}
+  if(is.na(tmp["Sicker"])){tmp["Sicker"] <- 0}
+  if(is.na(tmp["Steady"])){tmp["Steady"] <- 0}
   return(tmp)
 }
 #---------------------------------------------------------------------------------------------------------------------#

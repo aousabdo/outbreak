@@ -10,15 +10,16 @@ shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
 #       sliderInput("iteration",
-#                   "Hours:", min = 1, max = 79, value = 1, animate = animationOptions(interval = 2100, loop = FALSE)),
+#                   "Hours:", min = 1, max = 79, value = 1, animate = animationOptions(interval = 2000, loop = FALSE)),
       uiOutput("hoursControl")
       ),
 
     mainPanel(
       tabsetPanel(
-        tabPanel("Outbreak", plotOutput("outbreakPlot", width = "600px", height = "550px")),
-        tabPanel("Line Plot", plotOutput("linePlot", width = "1000px", height = "800px")),
-        tabPanel("Trend Plot", plotOutput("trendPlot", width = "800px", height = "650px"))
+        tabPanel("Disease Outbreak", plotOutput("outbreakPlot", width = "600px", height = "550px")),
+        tabPanel("Disease Trend", plotOutput("trendPlot", width = "800px", height = "650px")),
+        tabPanel("Recovery Trend", plotOutput("trendPlot2", width = "800px", height = "650px")),
+        tabPanel("Health Status Trend", plotOutput("linePlot", width = "1000px", height = "800px"))
         )
       )
     )

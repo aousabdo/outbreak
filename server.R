@@ -38,6 +38,10 @@ shinyServer(function(input, output) {
     trendPlot(DT = dbDT(), DTW = DTProcessed())
   })
   
+  output$trendPlot2 <- renderPlot({
+    trendPlot2(DT = dbDT(), DTW = DTProcessed())
+  })
+  
   output$hoursControl <- renderUI({
     sliderInput(inputId = "hours", label = "Hours", value = 1, min = 1, step = 1,
                 max = dbDT()[, length(unique(health_status_snapshot_date))],
