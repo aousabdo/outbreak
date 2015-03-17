@@ -61,7 +61,8 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE){
   }
   
   if(addXY){
-    DTW[, c("x", "y") := list(x = rep(1:5, each = 6), y = 1:6)]
+    tmp <- squareFun(nrow(DTW))
+    DTW[, c("x", "y") := list(tmp[1:nrow(DTW), x], tmp[1:nrow(DTW), y])]
   }
   return(DTW)
 }
@@ -88,16 +89,24 @@ change <- function(HS, p_up, p_dn){
 }
 #---------------------------------------------------------------------------------------------------------------------#
 
+squareFun <- function(x){
+  xs <- ceiling(sqrt(x))
+  dt <- data.table(x = rep(1:xs, each = xs), y = 1:xs)
+  setkey(dt, x)
+  return(dt)
+}
+
 #---------------------------------------------------------------------------------------------------------------------#
 # function to simulate population
 simPopulation <- function(iter, Npop, pUP, pDN){
   # initial distribution of health statuses
-  Npop <- 100 # number of simulated personas
+  # Npop <- 100 # number of simulated personas
   dist <- c(rep(1:2, Npop*0.3) , rep(3:4, Npop*0.15),rep(5:6, Npop*0.05))
   
   # start building the data.table
-  population <- data.table(x = rep(1:10, each = 10), y = 1:10, HS.1 = sample(dist))
-  
+  tmp <- squareFun(Npop)
+  population <- data.table( x = tmp[1:Npop, x], y = tmp[1:Npop, y], HS.1 = sample(dist))
+
   # we'll be adding a factor varialbe to show the levels of health status
   population[, level.1 := as.factor(sapply(HS.1, bucket))]
   
@@ -152,9 +161,9 @@ Bo <- function(DT){
 
 
 #---------------------------------------------------------------------------------------------------------------------#
-makePlot <- function(DT, level = 1){
+makePlot <- function(DT, DTW, level = 1){
   set.seed(123)
-  DTW <- processDT(DT, simulate = TRUE, addXY = TRUE)
+  
   population <- copy(DTW)
   
   Level <- paste('level', level, sep=".")
@@ -168,6 +177,7 @@ makePlot <- function(DT, level = 1){
     p <- p + geom_point(shape = 21, aes_string(col = Change), size = 14)
     p <- p + scale_color_manual(values=c("Recovery" = "black","Sicker" = "white","Steady" = "white"), guide = FALSE)
   }
+  
   p <- p + theme(axis.line=element_blank(),
                  axis.text.x=element_blank(),
                  axis.text.y=element_blank(),
@@ -181,23 +191,25 @@ makePlot <- function(DT, level = 1){
                  legend.title = element_text(colour="black", size=16, face="bold"),
                  legend.text = element_text(colour="black", size = 16, face = "bold")
   )
+  
   # p <- p + scale_fill_manual(values=c("#30AC30", "#FF3030", "#FFCC00"))
   p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
                              labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
                              values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
+  
   label <- as.POSIXct(DT[, unique(health_status_snapshot_date)])[level]
+  
   # p <- p + annotate("text", x = 3, y = 6.5, label = as.character(label), size = 8, col = "steelblue")
   p <- arrangeGrob(p, sub = textGrob(as.character(label), x = 0, hjust = -0.1, vjust=0.1, 
-                                         gp = gpar(fontface = "italic", fontsize = 20)))
+                                     gp = gpar(fontface = "italic", fontsize = 20)))
+  
   print(p)
 }
 #---------------------------------------------------------------------------------------------------------------------#
 
 #---------------------------------------------------------------------------------------------------------------------#
-linePlot <- function(DT, xmin, xmax){
-  DTW <- processDT(DT, simulate = TRUE, addXY = TRUE)
+linePlot <- function(DT, DTW, xmin, xmax){
   trend <- melt(Bo(DTW), id = 'iter')
-  
   trend[, time := as.POSIXct(DT[, unique(health_status_snapshot_date)])]
   
   pline <- ggplot(trend, aes(x = time, y = value, col = variable)) + geom_point() + geom_line() + theme_bw()
@@ -223,8 +235,7 @@ linePlot <- function(DT, xmin, xmax){
 # -------------------------------------------------------------------------------------#
 
 #---------------------------------------------------------------------------------------------------------------------#
-trendPlot <- function(DT){
-  DTW <- processDT(DT, simulate = TRUE, addXY = TRUE)
+trendPlot <- function(DT, DTW){
   pop.tmp <- DTW[, lapply(.SD, summaryFun), .SDcols = DTW[ , grep("level", colnames(DTW)) ]]
   pop.tmp[, reference := c("Healthy", "Symptomatic", "Infectious")]
   setkey(pop.tmp, reference)
@@ -232,7 +243,7 @@ trendPlot <- function(DT){
   pop.tmp.long <- melt(pop.tmp, id.vars = "reference")
   # pop.tmp.long[, time := rep(seq(1, ncol(pop.tmp)-1), each = 3)]
   pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)]), each = 3)]
-
+  
   p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1.25) + geom_point(size = 4) + theme_bw()
   p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
   p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
