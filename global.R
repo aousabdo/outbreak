@@ -274,7 +274,7 @@ trendPlot2 <- function(DT, DTW){
   p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
   p2 <- p2 + commonTheme
   p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Recovery", "Sicker", "Steady"),
-                                 labels =  c("Recovery", "Sicker", "Steady"),
+                                 labels =  c("Recovery ", "Sicker ", "Steady "),
                                  values = c("Recovery" = "#30AC30", "Sicker" = "#FF3030", "Steady" = "gray"))
   print(p2)
 }
