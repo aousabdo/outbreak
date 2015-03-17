@@ -10,7 +10,7 @@ shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
       sliderInput("iteration",
-                  "Hours:", min = 1, max = 79, value = 1, animate = animationOptions(interval = 1750, loop = FALSE))
+                  "Hours:", min = 1, max = 79, value = 1, animate = animationOptions(interval = 2100, loop = FALSE))
       ),
 
     mainPanel(
