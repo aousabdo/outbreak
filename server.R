@@ -43,7 +43,7 @@ shinyServer(function(input, output) {
   })
   
   output$hoursControl <- renderUI({
-    sliderInput(inputId = "hours", label = "Hours", value = 1, min = 1, step = 1,
+    sliderInput(inputId = "hours", label = "Hours", value = 1, min = 1, step = as.numeric(input$lapse),
                 max = dbDT()[, length(unique(health_status_snapshot_date))],
                 animate = animationOptions(interval = 2100, loop = FALSE))
   })

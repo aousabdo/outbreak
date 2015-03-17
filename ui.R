@@ -9,9 +9,9 @@ shinyUI(fluidPage(
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
-#       sliderInput("iteration",
-#                   "Hours:", min = 1, max = 79, value = 1, animate = animationOptions(interval = 2000, loop = FALSE)),
-      uiOutput("hoursControl")
+      uiOutput("hoursControl"),
+      br(),
+      selectInput("lapse", "Lapse time in hours", choices = c(1, 2, 6, 12), selected = 1)
       ),
 
     mainPanel(
