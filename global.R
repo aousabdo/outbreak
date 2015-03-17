@@ -192,7 +192,6 @@ makePlot <- function(DT, DTW, level = 1){
                  legend.text = element_text(colour="black", size = 16, face = "bold")
   )
   
-  # p <- p + scale_fill_manual(values=c("#30AC30", "#FF3030", "#FFCC00"))
   p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
                              labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
                              values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))

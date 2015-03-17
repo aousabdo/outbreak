@@ -24,7 +24,7 @@ shinyServer(function(input, output) {
   })
     
   output$outbreakPlot <- renderPlot({
-    makePlot(DT = dbDT(), DTW = DTProcessed(), level = input$iteration)
+    makePlot(DT = dbDT(), DTW = DTProcessed(), level = input$hours)
     
   })
   
@@ -36,4 +36,9 @@ shinyServer(function(input, output) {
     trendPlot(DT = dbDT(), DTW = DTProcessed())
   })
   
+  output$hoursControl <- renderUI({
+    sliderInput(inputId = "hours", label = "Hours", value = 1, min = 1, step = 1,
+                max = dbDT()[, length(unique(health_status_snapshot_date))],
+                animate = animationOptions(interval = 2100, loop = FALSE))
+  })
 })
