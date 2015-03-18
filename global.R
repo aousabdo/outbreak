@@ -11,9 +11,11 @@ library(gridExtra)
 # function to read data from database
 fetchDB <- function(dbTable){
   #Establish connection to Vertica DB
+  # this is the local connection configuration
   BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="C:/Users/abdoa/Downloads/vertica-jdbc-7.1.1-0.jar")
   himss <- dbConnect(BDDE_himss, "jdbc:vertica://localhost/BDDE_himss", username = dbTable, password = "vertica")
   
+  # this is the server connection configuration
   # BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="~shiny2/vertica-jdbc-7.1.1-0.jar")
   # himss <- dbConnect(BDDE_himss, "jdbc:vertica://206.164.65.108/BDDE_himss", username = dbTable, password = "vertica")
   
@@ -23,8 +25,10 @@ fetchDB <- function(dbTable){
   # disconnect from DB
   dbDisconnect(himss)
   
+  # convert read data into data.table
   DT <- as.data.table(DT)
   
+  # set data.table key for speed
   setkey(DT, health_status_snapshot_date)
   return(DT)
 }
@@ -38,15 +42,18 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP, pDN){
   DT.tmp <- copy(DT)
   
   # remove unwanted columns
-  DT.tmp[, c("health_status_timestamp", "time_recorded", "reason_changed") := NULL]
+  DT.tmp[, c("health_status_timestamp", "time_recorded", "reason_changed", "synthesized") := NULL]
   
+  # simulate data if prompted
   if(simulate){
+    # get number of participants in DB
     Npop <- DT.tmp[, length(unique(participant_id))]
+    # get number of hours in DB
     iter <- DT.tmp[, length(unique(health_status_snapshot_date))]
-    dist <- c(rep(1:2, Npop*0.3) , rep(3:4, Npop*0.15),rep(5:6, Npop*0.05)) 
+    # draw a random sample for health statuses 
     dist <- sample(1:6, Npop, replace = T)
-    tmp <- dcast.data.table(DT.tmp, participant_id ~ health_status_snapshot_date, value.var = "health_status_ref_id")
-    
+
+    # data.table to contain wide format for plots    
     DTW <- data.table(participant_id = DT.tmp[, unique(participant_id)], HS.1 = sample(x = dist, size = Npop, replace = T))
     DTW[, level.1 := as.factor(sapply(HS.1, bucket))]
     set.seed(123)
