@@ -191,69 +191,87 @@ Bo <- function(DTW){
 
 #---------------------------------------------------------------------------------------------------------------------#
 makePlot <- function(DT, DTW, level = 1){
-  set.seed(123)
-  
-  population <- copy(DTW)
-  
-  Level <- paste('level', level, sep=".")
-  Change <- paste('change', level , level-1 , sep="_")
-  
-  p <- ggplot(population, aes(x = x, y = y))
-  p <- p + geom_point(aes_string(fill = Level), shape = 21, size = 12, col = "white") 
-  if(level >= 2){
-    # here we add the circles Bo wanted
-    # make sure legned is not displayed, this is done with the guide = FALSE line
-    p <- p + geom_point(shape = 21, aes_string(col = Change), size = 14)
-    p <- p + scale_color_manual(values=c("Recovery" = "black","Sicker" = "white","Steady" = "white"), guide = FALSE)
+  if(DTW[, length(grep("HS.", colnames(DTW)))] < 2){
+    par(mar = c(0,0,0,0))
+    plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+    text(x = 0.5, y = 0.85, paste("There isn't enough time histroy to display this figure.\n", 
+                                  "Please allow at least 2 hours to pass before attempting to access this figure."), 
+         cex = 1.6, col = "steelblue")
   }
-  
-  p <- p + theme(axis.line=element_blank(),
-                 axis.text.x=element_blank(),
-                 axis.text.y=element_blank(),
-                 axis.ticks=element_blank(),
-                 axis.title.x=element_blank(),
-                 axis.title.y=element_blank(),
-                 legend.position="bottom",
-                 panel.grid.major=element_blank(),
-                 panel.background = element_rect(fill = "#F0F0F0", colour = "grey50", size = 2),
-                 panel.grid.minor=element_blank(),
-                 legend.title = element_text(colour="black", size=16, face="bold"),
-                 legend.text = element_text(colour="black", size = 16, face = "bold")
-  )
-  
-  p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
-                             labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
-                             values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
-  
-  label <- as.POSIXct(DT[, unique(health_status_snapshot_date)])[level]
-  
-  # p <- p + annotate("text", x = 3, y = 6.5, label = as.character(label), size = 8, col = "steelblue")
-  p <- arrangeGrob(p, sub = textGrob(as.character(label), x = 0, hjust = -0.1, vjust=0.1, 
-                                     gp = gpar(fontface = "italic", fontsize = 20)))
-  
-  print(p)
+  else{
+    set.seed(123)
+    
+    population <- copy(DTW)
+    
+    Level <- paste('level', level, sep=".")
+    Change <- paste('change', level , level-1 , sep="_")
+    
+    p <- ggplot(population, aes(x = x, y = y))
+    p <- p + geom_point(aes_string(fill = Level), shape = 21, size = 12, col = "white") 
+    if(level >= 2){
+      # here we add the circles Bo wanted
+      # make sure legned is not displayed, this is done with the guide = FALSE line
+      p <- p + geom_point(shape = 21, aes_string(col = Change), size = 14)
+      p <- p + scale_color_manual(values=c("Recovery" = "black","Sicker" = "white","Steady" = "white"), guide = FALSE)
+    }
+    
+    p <- p + theme(axis.line=element_blank(),
+                   axis.text.x=element_blank(),
+                   axis.text.y=element_blank(),
+                   axis.ticks=element_blank(),
+                   axis.title.x=element_blank(),
+                   axis.title.y=element_blank(),
+                   legend.position="bottom",
+                   panel.grid.major=element_blank(),
+                   panel.background = element_rect(fill = "#F0F0F0", colour = "grey50", size = 2),
+                   panel.grid.minor=element_blank(),
+                   legend.title = element_text(colour="black", size=16, face="bold"),
+                   legend.text = element_text(colour="black", size = 16, face = "bold")
+    )
+    
+    p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
+                               labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
+                               values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
+    
+    label <- as.POSIXct(DT[, unique(health_status_snapshot_date)])[level]
+    
+    # p <- p + annotate("text", x = 3, y = 6.5, label = as.character(label), size = 8, col = "steelblue")
+    p <- arrangeGrob(p, sub = textGrob(as.character(label), x = 0, hjust = -0.1, vjust=0.1, 
+                                       gp = gpar(fontface = "italic", fontsize = 20)))
+    
+    print(p)
+  }
 }
 #---------------------------------------------------------------------------------------------------------------------#
 
 #---------------------------------------------------------------------------------------------------------------------#
 linePlot <- function(DT, DTW){
-  trend <- melt(Bo(DTW), id = 'iter')
-  trend[, time := as.POSIXct(DT[, unique(health_status_snapshot_date)])]
-  
-  pline <- ggplot(trend, aes(x = time, y = value, col = variable)) + geom_point() + geom_line() + theme_bw()
-  pline <- pline + theme(legend.position = "bottom") + xlab("\nTime (Hours)") + ylab("Count")
-  pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
-                               aes(fill = variable), alpha = 0.115, lty = 2) + facet_wrap(~ variable)
-  pline <- pline + scale_color_manual(name = "", breaks = paste0('HS.', 1:6),
-                                      values = c("#30AC30", "#217821", "#FFCC00", "#cca300", "#FF3030", "#661313"), 
-                                      labels = paste0('Health Status ', 1:6, ' '))
-  # now get rid of the other legend
-  pline <- pline + scale_fill_manual(name = "", breaks = paste0('HS.', 1:6),
-                                     values = rep(c("#30AC30", "#FFCC00", "#FF3030"), each = 2), 
-                                     labels = paste0('HS.', 1:6), guide = FALSE)
-  pline <- pline + commonTheme + guides(colour = guide_legend(nrow = 2))
-  pline <- pline + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-  print(pline)
+  if(DTW[, length(grep("HS.", colnames(DTW)))] < 3){
+    par(mar = c(0,0,0,0))
+    plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+    text(x = 0.5, y = 0.85, paste("There isn't enough time histroy to display this figure.\n", 
+                                  "Please allow at least 3 hours to pass before attempting to access this figure."), 
+         cex = 1.6, col = "steelblue")
+  }
+  else{
+    trend <- melt(Bo(DTW), id = 'iter')
+    trend[, time := as.POSIXct(DT[, unique(health_status_snapshot_date)])]
+    
+    pline <- ggplot(trend, aes(x = time, y = value, col = variable)) + geom_point() + geom_line() + theme_bw()
+    pline <- pline + theme(legend.position = "bottom") + xlab("\nTime (Hours)") + ylab("Count")
+    pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
+                                 aes(fill = variable), alpha = 0.115, lty = 2) + facet_wrap(~ variable)
+    pline <- pline + scale_color_manual(name = "", breaks = paste0('HS.', 1:6),
+                                        values = c("#30AC30", "#217821", "#FFCC00", "#cca300", "#FF3030", "#661313"), 
+                                        labels = paste0('Health Status ', 1:6, ' '))
+    # now get rid of the other legend
+    pline <- pline + scale_fill_manual(name = "", breaks = paste0('HS.', 1:6),
+                                       values = rep(c("#30AC30", "#FFCC00", "#FF3030"), each = 2), 
+                                       labels = paste0('HS.', 1:6), guide = FALSE)
+    pline <- pline + commonTheme + guides(colour = guide_legend(nrow = 2))
+    pline <- pline + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    print(pline)
+  }
 }
 
 # -------------------------------------------------------------------------------------#
@@ -264,22 +282,31 @@ linePlot <- function(DT, DTW){
 
 #---------------------------------------------------------------------------------------------------------------------#
 trendPlot <- function(DT, DTW){
-  pop.tmp <- DTW[, lapply(.SD, summaryFun), .SDcols = DTW[ , grep("level", colnames(DTW)) ]]
-  pop.tmp[, reference := c("Healthy", "Infectious", "Symptomatic")]
-  setkey(pop.tmp, reference)
-  
-  pop.tmp.long <- melt(pop.tmp, id.vars = "reference")
-  # pop.tmp.long[, time := rep(seq(1, ncol(pop.tmp)-1), each = 3)]
-  pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)]), each = 3)]
-  
-  p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1.25) + geom_point(size = 4) + theme_bw()
-  p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
-  p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
-  p2 <- p2 + commonTheme
-  p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
-                                 labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
-                                 values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
-  print(p2)
+  if(DTW[, length(grep("HS.", colnames(DTW)))] < 2){
+    par(mar = c(0,0,0,0))
+    plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+    text(x = 0.5, y = 0.85, paste("There isn't enough time histroy to display this figure.\n", 
+                                  "Please allow at least 2 hours to pass before attempting to access this figure."), 
+         cex = 1.6, col = "steelblue")
+  }
+  else{
+    pop.tmp <- DTW[, lapply(.SD, summaryFun), .SDcols = DTW[ , grep("level", colnames(DTW)) ]]
+    pop.tmp[, reference := c("Healthy", "Infectious", "Symptomatic")]
+    setkey(pop.tmp, reference)
+    
+    pop.tmp.long <- melt(pop.tmp, id.vars = "reference")
+    # pop.tmp.long[, time := rep(seq(1, ncol(pop.tmp)-1), each = 3)]
+    pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)]), each = 3)]
+    
+    p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1.25) + geom_point(size = 4) + theme_bw()
+    p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
+    p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
+    p2 <- p2 + commonTheme
+    p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
+                                   labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
+                                   values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
+    print(p2)
+  }
 }
 #---------------------------------------------------------------------------------------------------------------------#
 
