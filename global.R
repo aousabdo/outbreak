@@ -20,7 +20,12 @@ fetchDB <- function(dbTable){
   # himss <- dbConnect(BDDE_himss, "jdbc:vertica://206.164.65.108/BDDE_himss", username = dbTable, password = "vertica")
   
   # read snapshot health status table as a data.tble
-  DT <- fetch(dbSendQuery(himss, "SELECT * FROM health_status_snapshot WHERE participant_id >= 0"), n = -1)
+  # DT <- fetch(dbSendQuery(himss, "SELECT * FROM health_status_snapshot WHERE participant_id >= 0"), n = -1)
+  
+  DT <- fetch(dbSendQuery(himss, "SELECT hss.* 
+                                  FROM health_status_snapshot hss 
+                                  LEFT JOIN participant p
+                                  ON p.participant_id = hss.participant_id"), n = -1)
   
   # disconnect from DB
   dbDisconnect(himss)
