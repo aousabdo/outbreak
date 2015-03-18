@@ -303,7 +303,7 @@ trendPlot2 <- function(DT, DTW){
   p2 <- p2 + commonTheme
   p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Recovery", "Sicker", "Steady"),
                                  labels = c("Recovered ", "Got Sicker ", "No Change in Health Status "),
-                                 values = c("Recovery" = "#30AC30", "Sicker" = "#FF3030", "Steady" = "gray"))
+                                 values = c("Recovery" = "steelblue", "Sicker" = "darkblue", "Steady" = "gray"))
   print(p2)
 }
 #---------------------------------------------------------------------------------------------------------------------#
