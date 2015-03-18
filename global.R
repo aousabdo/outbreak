@@ -11,14 +11,18 @@ library(gridExtra)
 # function to read data from database
 fetchDB <- function(dbTable){
   #Establish connection to Vertica DB
- BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="C:/Users/abdoa/Downloads/vertica-jdbc-7.1.1-0.jar")
- himss <- dbConnect(BDDE_himss, "jdbc:vertica://localhost/BDDE_himss", username = dbTable, password = "vertica")
+  BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="C:/Users/abdoa/Downloads/vertica-jdbc-7.1.1-0.jar")
+  himss <- dbConnect(BDDE_himss, "jdbc:vertica://localhost/BDDE_himss", username = dbTable, password = "vertica")
   
-     # BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="~shiny2/vertica-jdbc-7.1.1-0.jar")
-     # himss <- dbConnect(BDDE_himss, "jdbc:vertica://206.164.65.108/BDDE_himss", username = dbTable, password = "vertica")
+  # BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="~shiny2/vertica-jdbc-7.1.1-0.jar")
+  # himss <- dbConnect(BDDE_himss, "jdbc:vertica://206.164.65.108/BDDE_himss", username = dbTable, password = "vertica")
   
   # read snapshot health status table as a data.tble
-  DT <- fetch(dbSendQuery(himss, "SELECT * FROM health_status_snapshot WHERE participant_id >= 170"), n = -1)
+  DT <- fetch(dbSendQuery(himss, "SELECT * FROM health_status_snapshot WHERE participant_id >= 0"), n = -1)
+  
+  # disconnect from DB
+  dbDisconnect(himss)
+  
   DT <- as.data.table(DT)
   
   setkey(DT, health_status_snapshot_date)
@@ -28,36 +32,52 @@ fetchDB <- function(dbTable){
 
 #---------------------------------------------------------------------------------------------------------------------#
 # function to process data.table read from Vertica DB
-processDT <- function(DT, simulate = FALSE, addXY = TRUE){
+processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP, pDN){
   # the simulate parameter should be invoked if no health status updates occur as time passes
   # make a copy of the data.table to process
   DT.tmp <- copy(DT)
   
-  if(simulate){
-    # randomize 
-    DT.tmp[, health_status_ref_id := sample(1:6, nrow(DT.tmp), replace = TRUE)]
-  }
   # remove unwanted columns
   DT.tmp[, c("health_status_timestamp", "time_recorded", "reason_changed") := NULL]
   
-  # convert to wide format to match code 
-  DTW <- dcast.data.table(DT.tmp, participant_id ~ health_status_snapshot_date, value.var = "health_status_ref_id")
-  
-  # change columns names
-  Names <- paste0("HS.", 1:(ncol(DTW) - 1))
-  setnames(DTW, c("participant_id", Names))
-  
-  DTW[, level.1 := as.factor(sapply(HS.1, bucket))]
-  
-  # now add new calculated columns necessary for the visualization
-  for(i in 2:(ncol(DTW)-2)){
-    one <- paste0("HS.",i)
-    two <- paste0("HS.",i-1)
-    three <- paste0("level.", i)
-    four <- paste("change", i, i-1, sep = "_")
-    # DTW[, as.character(one) := sapply(eval(parse(text=two)), change, p_up = pUP, p_dn = pDN)]
-    DTW[, as.character(four) := as.factor(sapply(diag(outer(eval(parse(text = one)), eval(parse(text= two)), "-")), factorize))]
-    DTW[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket))]
+  if(simulate){
+    Npop <- DT.tmp[, length(unique(participant_id))]
+    iter <- DT.tmp[, length(unique(health_status_snapshot_date))]
+    dist <- c(rep(1:2, Npop*0.3) , rep(3:4, Npop*0.15),rep(5:6, Npop*0.05)) 
+    dist <- sample(1:6, Npop, replace = T)
+    tmp <- dcast.data.table(DT.tmp, participant_id ~ health_status_snapshot_date, value.var = "health_status_ref_id")
+    
+    DTW <- data.table(participant_id = DT.tmp[, unique(participant_id)], HS.1 = sample(x = dist, size = Npop, replace = T))
+    DTW[, level.1 := as.factor(sapply(HS.1, bucket))]
+    set.seed(123)
+    for(i in 2:iter){
+      one <- paste0("HS.",i)
+      two <- paste0("HS.",i-1)
+      three <- paste0("level.", i)
+      four <- paste("change", i, i-1, sep = "_")
+      DTW[, as.character(one) := sapply(eval(parse(text=two)), change, p_up = pUP, p_dn = pDN)]
+      DTW[, as.character(four) := as.factor(sapply(diag(outer(eval(parse(text = one)), eval(parse(text= two)), "-")), factorize))]
+      DTW[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket))]
+    }
+  }
+  else{
+    # convert to wide format to match code 
+    DTW <- dcast.data.table(DT.tmp, participant_id ~ health_status_snapshot_date, value.var = "health_status_ref_id")
+    
+    # change columns names
+    Names <- paste0("HS.", 1:(ncol(DTW) - 1))
+    setnames(DTW, c("participant_id", Names))
+    
+    DTW[, level.1 := as.factor(sapply(HS.1, bucket))]
+    # now add new calculated columns necessary for the visualization
+    for(i in 2:(ncol(DTW)-2)){
+      one <- paste0("HS.",i)
+      two <- paste0("HS.",i-1)
+      three <- paste0("level.", i)
+      four <- paste("change", i, i-1, sep = "_")
+      DTW[, as.character(four) := as.factor(sapply(diag(outer(eval(parse(text = one)), eval(parse(text= two)), "-")), factorize))]
+      DTW[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket))]
+    }
   }
   
   if(addXY){
@@ -106,7 +126,7 @@ simPopulation <- function(iter, Npop, pUP, pDN){
   # start building the data.table
   tmp <- squareFun(Npop)
   population <- data.table( x = tmp[1:Npop, x], y = tmp[1:Npop, y], HS.1 = sample(dist))
-
+  
   # we'll be adding a factor varialbe to show the levels of health status
   population[, level.1 := as.factor(sapply(HS.1, bucket))]
   
@@ -236,7 +256,7 @@ linePlot <- function(DT, DTW, xmin, xmax){
 #---------------------------------------------------------------------------------------------------------------------#
 trendPlot <- function(DT, DTW){
   pop.tmp <- DTW[, lapply(.SD, summaryFun), .SDcols = DTW[ , grep("level", colnames(DTW)) ]]
-  pop.tmp[, reference := c("Healthy", "Symptomatic", "Infectious")]
+  pop.tmp[, reference := c("Healthy", "Infectious", "Symptomatic")]
   setkey(pop.tmp, reference)
   
   pop.tmp.long <- melt(pop.tmp, id.vars = "reference")
@@ -274,7 +294,7 @@ trendPlot2 <- function(DT, DTW){
   p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
   p2 <- p2 + commonTheme
   p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Recovery", "Sicker", "Steady"),
-                                 labels =  c("Recovery ", "Sicker ", "Steady "),
+                                 labels = c("Recovered ", "Got Sicker ", "No Change in Health Status "),
                                  values = c("Recovery" = "#30AC30", "Sicker" = "#FF3030", "Steady" = "gray"))
   print(p2)
 }
@@ -294,7 +314,7 @@ summaryFun2 <- function(x){
   if(is.na(tmp["Recovery"])){tmp["Recovery"] <- 0}
   if(is.na(tmp["Sicker"])){tmp["Sicker"] <- 0}
   if(is.na(tmp["Steady"])){tmp["Steady"] <- 0}
-  return(tmp)
+  return(sort(tmp))
 }
 #---------------------------------------------------------------------------------------------------------------------#
 

@@ -20,7 +20,7 @@ shinyServer(function(input, output) {
   
   DTProcessed <- reactive({
     set.seed(123)
-    return(processDT(dbDT(), simulate = T))
+    return(processDT(dbDT(), simulate = input$simulate, pUP = input$pUP/100, pDN = input$pDN/100))
   })
   
   output$outbreakPlot <- renderPlot({
