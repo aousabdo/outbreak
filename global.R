@@ -97,6 +97,7 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP, pDN){
     tmp <- tmp[sample(1:nrow(tmp))]
     DTW[, c("x", "y") := list(tmp[1:nrow(DTW), x], tmp[1:nrow(DTW), y])]
   }
+  setkey(DTW, participant_id)
   return(DTW)
 }
 #---------------------------------------------------------------------------------------------------------------------#
