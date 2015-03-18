@@ -82,6 +82,7 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP, pDN){
   
   if(addXY){
     tmp <- squareFun(nrow(DTW))
+    tmp <- tmp[sample(1:nrow(tmp))]
     DTW[, c("x", "y") := list(tmp[1:nrow(DTW), x], tmp[1:nrow(DTW), y])]
   }
   return(DTW)
