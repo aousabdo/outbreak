@@ -78,7 +78,6 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP, pDN){
     DTW[, level.1 := as.factor(sapply(HS.1, bucket))]
     # now add new calculated columns necessary for the visualization
     for(i in 2:(ncol(DTW)-2)){
-      print(i)
       one <- paste0("HS.",i)
       two <- paste0("HS.",i-1)
       three <- paste0("level.", i)
