@@ -18,7 +18,7 @@ shinyUI(fluidPage(
         checkboxInput("simulate", label = "Simulate Data", value = FALSE), 
         conditionalPanel(condition = "input.simulate",
                          sliderInput("pUP",
-                                     "Probability of getting sicker:", min = 20, max = 50, value = 42),
+                                     "Probability of getting sicker:", min = 20, max = 50, value = 35),
                          br(),
                          sliderInput("pDN",
                                      "Probability of recovery:", min = 20, max = 50, value = 25))
