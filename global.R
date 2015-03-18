@@ -228,7 +228,7 @@ makePlot <- function(DT, DTW, level = 1){
 #---------------------------------------------------------------------------------------------------------------------#
 
 #---------------------------------------------------------------------------------------------------------------------#
-linePlot <- function(DT, DTW, xmin, xmax){
+linePlot <- function(DT, DTW){
   trend <- melt(Bo(DTW), id = 'iter')
   trend[, time := as.POSIXct(DT[, unique(health_status_snapshot_date)])]
   
@@ -292,7 +292,7 @@ trendPlot2 <- function(DT, DTW){
   
   p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1.25) + geom_point(size = 4) + theme_bw()
   p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
-  p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
+  p2 <- p2 + ggtitle("Trend of Recovery Over Time\n")
   p2 <- p2 + commonTheme
   p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Recovery", "Sicker", "Steady"),
                                  labels = c("Recovered ", "Got Sicker ", "No Change in Health Status "),
