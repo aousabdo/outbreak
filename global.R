@@ -52,7 +52,7 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP, pDN){
     iter <- DT.tmp[, length(unique(health_status_snapshot_date))]
     # draw a random sample for health statuses 
     dist <- sample(1:6, Npop, replace = T)
-
+    
     # data.table to contain wide format for plots    
     DTW <- data.table(participant_id = DT.tmp[, unique(participant_id)], HS.1 = sample(x = dist, size = Npop, replace = T))
     DTW[, level.1 := as.factor(sapply(HS.1, bucket))]
@@ -78,6 +78,7 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP, pDN){
     DTW[, level.1 := as.factor(sapply(HS.1, bucket))]
     # now add new calculated columns necessary for the visualization
     for(i in 2:(ncol(DTW)-2)){
+      print(i)
       one <- paste0("HS.",i)
       two <- paste0("HS.",i-1)
       three <- paste0("level.", i)
@@ -284,27 +285,36 @@ trendPlot <- function(DT, DTW){
 
 #---------------------------------------------------------------------------------------------------------------------#
 trendPlot2 <- function(DT, DTW){
-  # apply pre defined summary function to aggregate the change columns
-  pop.tmp <- DTW[, lapply(.SD, summaryFun2), .SDcols = DTW[ , grep("change", colnames(DTW)) ]]
-  # add column for reference
-  pop.tmp[, reference := as.factor(c("Recovery", "Sicker", "Steady"))]
-  setkey(pop.tmp, reference)
-  
-  # convert into long format
-  pop.tmp.long <- melt(pop.tmp, id.vars = "reference")
-  # notice that since the "change" variable is less by 1 compared to the nubmer of participants
-  # we have to exclude the first time stamp, i.e. first change starts with the introduction of 
-  # the second participant
-  pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)][-1]), each = 3)]
-  
-  p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1.25) + geom_point(size = 4) + theme_bw()
-  p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
-  p2 <- p2 + ggtitle("Trend of Recovery Over Time\n")
-  p2 <- p2 + commonTheme
-  p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Recovery", "Sicker", "Steady"),
-                                 labels = c("Recovered ", "Got Sicker ", "No Change in Health Status "),
-                                 values = c("Recovery" = "steelblue", "Sicker" = "darkblue", "Steady" = "gray"))
-  print(p2)
+  if(DTW[, length(grep("HS.", colnames(DTW)))] < 3){
+    par(mar = c(0,0,0,0))
+    plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+    text(x = 0.5, y = 0.85, paste("There isn't enough time histroy to display this figure.\n", 
+                                  "Please allow at least 3 hours to pass before attempting to access this figure."), 
+         cex = 1.6, col = "steelblue")
+  }
+  else{
+    # apply pre defined summary function to aggregate the change columns
+    pop.tmp <- DTW[, lapply(.SD, summaryFun2), .SDcols = DTW[ , grep("change", colnames(DTW)) ]]
+    # add column for reference
+    pop.tmp[, reference := as.factor(c("Recovery", "Sicker", "Steady"))]
+    setkey(pop.tmp, reference)
+    
+    # convert into long format
+    pop.tmp.long <- melt(pop.tmp, id.vars = "reference")
+    # notice that since the "change" variable is less by 1 compared to the nubmer of participants
+    # we have to exclude the first time stamp, i.e. first change starts with the introduction of 
+    # the second participant
+    pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)][-1]), each = 3)]
+    
+    p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1.25) + geom_point(size = 4) + theme_bw()
+    p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
+    p2 <- p2 + ggtitle("Trend of Recovery Over Time\n")
+    p2 <- p2 + commonTheme
+    p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Recovery", "Sicker", "Steady"),
+                                   labels = c("Recovered ", "Got Sicker ", "No Change in Health Status "),
+                                   values = c("Recovery" = "steelblue", "Sicker" = "darkblue", "Steady" = "gray"))
+    print(p2)
+  }
 }
 #---------------------------------------------------------------------------------------------------------------------#
 
