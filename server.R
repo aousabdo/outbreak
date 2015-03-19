@@ -15,7 +15,7 @@ shinyServer(function(input, output) {
   
   # read database and create HS table
   dbDT <- reactive({
-    return(fetchDB('himss_test'))
+    return(fetchDB('himss_test'))#, hoursNMax = as.numeric(input$last)))
   })
   
   DTProcessed <- reactive({

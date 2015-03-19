@@ -10,6 +10,8 @@ shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
       wellPanel(
+        # selectInput('last', 'Show the most recent hours:', choices = c(6, 12, 24, 36, 48, 72), selected = 24),
+        # br(),
         uiOutput("hoursControl"),
         br(),
         selectInput("lapse", "Lapse time in hours", choices = c(1, 2, 6, 12), selected = 1)), 

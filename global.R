@@ -9,7 +9,7 @@ library(gridExtra)
 
 #---------------------------------------------------------------------------------------------------------------------#
 # function to read data from database
-fetchDB <- function(dbTable){
+fetchDB <- function(dbTable, hoursNMax){
   #Establish connection to Vertica DB
   # this is the local connection configuration
   BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="C:/Users/abdoa/Downloads/vertica-jdbc-7.1.1-0.jar")
@@ -24,8 +24,9 @@ fetchDB <- function(dbTable){
   
   DT <- fetch(dbSendQuery(himss, "SELECT hss.* 
                                   FROM health_status_snapshot hss 
-                                  LEFT JOIN participant p
-                                  ON p.participant_id = hss.participant_id"), n = -1)
+                                  INNER JOIN participant p 
+                                  ON p.participant_id = hss.participant_id
+                          AND p.beacon_id IS NOT NULL"), n = -1)
   
   # disconnect from DB
   dbDisconnect(himss)
@@ -35,6 +36,10 @@ fetchDB <- function(dbTable){
   
   # set data.table key for speed
   setkey(DT, health_status_snapshot_date)
+  
+  # Nunique <- DT[,length(unique(health_status_snapshot_date))]
+  # DT <- DT[unique(health_status_snapshot_date)[(Nunique - (hoursNMax -1)):Nunique]]
+  
   return(DT)
 }
 #---------------------------------------------------------------------------------------------------------------------#
@@ -80,6 +85,8 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP, pDN){
     Names <- paste0("HS.", 1:(ncol(DTW) - 1))
     setnames(DTW, c("participant_id", Names))
     
+    f_dowle3(DTW)
+    
     DTW[, level.1 := as.factor(sapply(HS.1, bucket))]
     # now add new calculated columns necessary for the visualization
     for(i in 2:(ncol(DTW)-2)){
@@ -93,7 +100,7 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP, pDN){
   }
   
   if(addXY){
-    tmp <- squareFun(nrow(DTW))
+    tmp <- squareFun2(nrow(DTW))
     tmp <- tmp[sample(1:nrow(tmp))]
     DTW[, c("x", "y") := list(tmp[1:nrow(DTW), x], tmp[1:nrow(DTW), y])]
   }
@@ -124,8 +131,36 @@ change <- function(HS, p_up, p_dn){
 #---------------------------------------------------------------------------------------------------------------------#
 
 squareFun <- function(x){
-  xs <- ceiling(sqrt(x))
-  dt <- data.table(x = rep(1:xs, each = xs), y = 1:xs)
+  a <- b  <- ceiling(sqrt(x))
+  dt <- data.table(x = rep(1:a, each = b), y = 1:b)
+  setkey(dt, x)
+  return(dt)
+}
+
+squareFun2 <- function(x){
+  a1 <- b1  <- ceiling(sqrt(x))
+  
+  if(x%%2 == 1) x <- x + 1
+  div <- seq_len(x)
+  y <- div[x %% div == 0]
+  if((length(y) %% 2) == 1){ 
+    a2 <- b2 <- y[(length(y)-1)/2 + 1]
+  }
+  else {
+    a2 <- y[length(y)/2] 
+    b2 <- y[(length(y)/2 + 1)]
+  }
+  
+  if(abs(a2-b2) < 2){
+    a <- a2
+    b <- b2
+  }
+  else{
+    a <- a1
+    b <- b1
+  }
+
+  dt <- data.table(x = rep(1:a, each = b), y = 1:b)
   setkey(dt, x)
   return(dt)
 }
@@ -367,6 +402,19 @@ summaryFun2 <- function(x){
   return(sort(tmp))
 }
 #---------------------------------------------------------------------------------------------------------------------#
+
+
+f_dowle3 = function(DT) {
+  # either of the following for loops
+  
+  #   # by name :
+  #   for (j in names(DT))
+  #     set(DT,which(is.na(DT[[j]])),j,0)
+  
+  # or by number (slightly faster than by name) :
+  for (j in seq_len(ncol(DT)))
+    set(DT, which(is.na(DT[[j]])), j, 0)
+}
 
 #---------------------------------------------------------------------------------------------------------------------#
 # common theme for the ggplots
