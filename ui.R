@@ -15,7 +15,12 @@ shinyUI(fluidPage(
         helpText(HTML("<p> <font color=\"black\" size = 3>  Disease Outbreak Animation </font> </p> <hr>")),
         uiOutput("hoursControl"),
         br(),
-        selectInput("lapse", "Animation lapse time in hours", choices = c(1, 2, 6, 12), selected = 1)), 
+        selectInput("lapse", "Animation lapse time in hours", choices = c(1, 2, 6, 12), selected = 1),
+        tags$hr(),
+        checkboxInput("daysCheckBox", label = "Select Days to Display", value = FALSE),
+        conditionalPanel(condition = "input.daysCheckBox",
+                         uiOutput("daysControl"))
+      ), 
       wellPanel(
         helpText(HTML("<p> <font color=\"black\" size = 3>  Data Simulatoin </font> </p>")),
         checkboxInput("simulate", label = "Simulate Data", value = FALSE), 

@@ -406,7 +406,11 @@ summaryFun <- function(x){
   if(is.na(tmp["Healthy"])){tmp["Healthy"] <- 0}
   if(is.na(tmp["Symptomatic"])){tmp["Symptomatic"] <- 0}
   if(is.na(tmp["Infectious"])){tmp["Infectious"] <- 0}
-  return(sort(tmp))
+  tmp <- list("Healthy" = tmp[["Healthy"]],
+              "Symptomatic" = tmp[["Symptomatic"]],
+              "Infectious" = tmp[["Infectious"]]
+  )
+  return(unlist(tmp))
 }
 
 summaryFun2 <- function(x){
@@ -414,11 +418,15 @@ summaryFun2 <- function(x){
   if(is.na(tmp["Recovery"])){tmp["Recovery"] <- 0}
   if(is.na(tmp["Sicker"])){tmp["Sicker"] <- 0}
   if(is.na(tmp["Steady"])){tmp["Steady"] <- 0}
-  return(sort(tmp))
+  tmp <- list("Recovery" = tmp[["Recovery"]],
+              "Sicker" = tmp[["Sicker"]],
+              "Steady" = tmp[["Steady"]]
+  )
+  return(unlist(tmp))
 }
 #---------------------------------------------------------------------------------------------------------------------#
 
-
+#---------------------------------------------------------------------------------------------------------------------#
 f_dowle3 = function(DT) {
   # either of the following for loops
   
@@ -429,6 +437,18 @@ f_dowle3 = function(DT) {
   # or by number (slightly faster than by name) :
   for (j in seq_len(ncol(DT)))
     set(DT, which(is.na(DT[[j]])), j, 0)
+}
+#---------------------------------------------------------------------------------------------------------------------#
+
+selectDT <- function(DT, day = NULL){
+  if(is.null(day)){
+    days <- unique(grep("2015", unlist(strsplit(DT[1:nrow(DT), health_status_snapshot_date], split = " ")), value = T))
+    DT.tmp <- DT[like(health_status_snapshot_date, paste(days, collapse = "|"))]
+  }
+  else{
+    DT.tmp <- DT[like(health_status_snapshot_date, day)]
+  }
+  return(DT.tmp)
 }
 
 #---------------------------------------------------------------------------------------------------------------------#

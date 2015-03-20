@@ -18,33 +18,46 @@ shinyServer(function(input, output) {
     return(fetchDB('himss_test'))#, hoursNMax = as.numeric(input$last)))
   })
   
+  dbDTFinal <- reactive({
+    DT <- dbDT()
+    displayDays <- NULL
+    if(input$daysCheckBox) displayDays <- input$days
+    return(selectDT(DT = DT, day = displayDays))
+  })
+  
   DTProcessed <- reactive({
     set.seed(123)
-    return(processDT(dbDT(), simulate = input$simulate, pUP = input$pUP/100, pDN = input$pDN/100))
+    return(processDT(dbDTFinal(), simulate = input$simulate, pUP = input$pUP/100, pDN = input$pDN/100))
   })
   
   output$outbreakPlot <- renderPlot({
     if (is.null(input$hours))
       return(NULL)
-    makePlot(DT = dbDT(), DTW = DTProcessed(), level = input$hours)
+    makePlot(DT = dbDTFinal(), DTW = DTProcessed(), level = input$hours)
     
   })
   
   output$linePlot <- renderPlot({
-    linePlot(DT = dbDT(), DTW = DTProcessed())
+    linePlot(DT = dbDTFinal(), DTW = DTProcessed())
   })
   
   output$trendPlot <- renderPlot({
-    trendPlot(DT = dbDT(), DTW = DTProcessed())
+    trendPlot(DT = dbDTFinal(), DTW = DTProcessed())
   })
   
   output$trendPlot2 <- renderPlot({
-    trendPlot2(DT = dbDT(), DTW = DTProcessed())
+    trendPlot2(DT = dbDTFinal(), DTW = DTProcessed())
   })
   
   output$hoursControl <- renderUI({
     sliderInput(inputId = "hours", label = "Hours", value = 1, min = 1, step = as.numeric(input$lapse),
-                max = dbDT()[, length(unique(health_status_snapshot_date))],
+                max = dbDTFinal()[, length(unique(health_status_snapshot_date))],
                 animate = animationOptions(interval = 2100, loop = FALSE))
+  })
+  
+  output$daysControl <- renderUI({
+    DT <- dbDT()
+    days <- unique(grep("2015", unlist(strsplit(DT[1:nrow(DT), health_status_snapshot_date], split = " ")), value = T))
+    selectInput("days",label = "Select Days to Display", choices = days)
   })
 })
