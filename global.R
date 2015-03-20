@@ -26,7 +26,8 @@ fetchDB <- function(dbTable, hoursNMax){
                                   FROM health_status_snapshot hss 
                                   INNER JOIN participant p 
                                   ON p.participant_id = hss.participant_id
-                          AND p.beacon_id IS NOT NULL"), n = -1)
+                                  --AND p.beacon_id IS NOT NULL
+                                  AND p.email IS NOT NULL"), n = -1)
   
   # disconnect from DB
   dbDisconnect(himss)
@@ -137,29 +138,35 @@ squareFun <- function(x){
   return(dt)
 }
 
+# function to make an almost-square data.table for plotting dots
 squareFun2 <- function(x){
-  a1 <- b1  <- ceiling(sqrt(x))
-  
-  if(x%%2 == 1) x <- x + 1
-  div <- seq_len(x)
-  y <- div[x %% div == 0]
-  if((length(y) %% 2) == 1){ 
-    a2 <- b2 <- y[(length(y)-1)/2 + 1]
-  }
-  else {
-    a2 <- y[length(y)/2] 
-    b2 <- y[(length(y)/2 + 1)]
-  }
-  
-  if(abs(a2-b2) < 2){
-    a <- a2
-    b <- b2
+  # if number has an integer sqrt then just take it and proceed
+  if(sqrt(x)%%1 == 0 ){ 
+    a <- b <- sqrt(x)
   }
   else{
-    a <- a1
-    b <- b1
+    a1 <- b1  <- ceiling(sqrt(x))
+    
+    if(x%%2 == 1) x <- x + 1
+    div <- seq_len(x)
+    y <- div[x %% div == 0]
+    if((length(y) %% 2) == 1){ 
+      a2 <- b2 <- y[(length(y)-1)/2 + 1]
+    }
+    else {
+      a2 <- y[length(y)/2] 
+      b2 <- y[(length(y)/2 + 1)]
+    }
+    
+    if(abs(a2-b2) <= 3){
+      a <- a2
+      b <- b2
+    }
+    else{
+      a <- a1
+      b <- b1
+    }
   }
-
   dt <- data.table(x = rep(1:a, each = b), y = 1:b)
   setkey(dt, x)
   return(dt)
@@ -331,7 +338,7 @@ trendPlot <- function(DT, DTW){
   }
   else{
     pop.tmp <- DTW[, lapply(.SD, summaryFun), .SDcols = DTW[ , grep("level", colnames(DTW)) ]]
-    pop.tmp[, reference := c("Healthy", "Infectious", "Symptomatic")]
+    pop.tmp[, reference := c("Healthy", "Symptomatic", "Infectious")]
     setkey(pop.tmp, reference)
     
     pop.tmp.long <- melt(pop.tmp, id.vars = "reference")
@@ -391,7 +398,7 @@ summaryFun <- function(x){
   if(is.na(tmp["Healthy"])){tmp["Healthy"] <- 0}
   if(is.na(tmp["Symptomatic"])){tmp["Symptomatic"] <- 0}
   if(is.na(tmp["Infectious"])){tmp["Infectious"] <- 0}
-  return(tmp)
+  return(sort(tmp))
 }
 
 summaryFun2 <- function(x){
