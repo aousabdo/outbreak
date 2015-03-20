@@ -264,7 +264,7 @@ makePlot <- function(DT, DTW, level = 1){
     if(level >= 2){
       # here we add the circles Bo wanted
       # make sure legned is not displayed, this is done with the guide = FALSE line
-      p <- p + geom_point(shape = 22, aes_string(col = Change), size = 14)
+      p <- p + geom_point(shape = 0, aes_string(col = Change), size = 14)
       p <- p + scale_color_manual(values=c("Recovery" = "black","Sicker" = "#F0F0F0","Steady" = "#F0F0F0"), guide = FALSE)
     }
     
