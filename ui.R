@@ -12,11 +12,12 @@ shinyUI(fluidPage(
       wellPanel(
         # selectInput('last', 'Show the most recent hours:', choices = c(6, 12, 24, 36, 48, 72), selected = 24),
         # br(),
+        helpText(HTML("<p> <font color=\"black\" size = 3>  Disease Outbreak Animation </font> </p> <hr>")),
         uiOutput("hoursControl"),
         br(),
-        selectInput("lapse", "Lapse time in hours", choices = c(1, 2, 6, 12), selected = 1)), 
+        selectInput("lapse", "Animation lapse time in hours", choices = c(1, 2, 6, 12), selected = 1)), 
       wellPanel(
-        helpText("Data Simulation"),
+        helpText(HTML("<p> <font color=\"black\" size = 3>  Data Simulatoin </font> </p>")),
         checkboxInput("simulate", label = "Simulate Data", value = FALSE), 
         conditionalPanel(condition = "input.simulate",
                          sliderInput("pUP",
