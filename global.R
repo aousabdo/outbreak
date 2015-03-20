@@ -264,8 +264,8 @@ makePlot <- function(DT, DTW, level = 1){
     if(level >= 2){
       # here we add the circles Bo wanted
       # make sure legned is not displayed, this is done with the guide = FALSE line
-      p <- p + geom_point(shape = 21, aes_string(col = Change), size = 14)
-      p <- p + scale_color_manual(values=c("Recovery" = "black","Sicker" = "white","Steady" = "white"), guide = FALSE)
+      p <- p + geom_point(shape = 22, aes_string(col = Change), size = 14)
+      p <- p + scale_color_manual(values=c("Recovery" = "black","Sicker" = "#F0F0F0","Steady" = "#F0F0F0"), guide = FALSE)
     }
     
     p <- p + theme(axis.line=element_blank(),
@@ -310,7 +310,7 @@ linePlot <- function(DT, DTW){
     trend <- melt(Bo(DTW), id = 'iter')
     trend[, time := as.POSIXct(DT[, unique(health_status_snapshot_date)])]
     
-    pline <- ggplot(trend, aes(x = time, y = value, col = variable)) + geom_point() + geom_line() + theme_bw()
+    pline <- ggplot(trend, aes(x = time, y = value, col = variable)) + geom_point() + geom_line(alpha = 0.35) + theme_bw()
     pline <- pline + theme(legend.position = "bottom") + xlab("\nTime (Hours)") + ylab("Count")
     pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
                                  aes(fill = variable), alpha = 0.115, lty = 2) + facet_wrap(~ variable)
@@ -351,7 +351,8 @@ trendPlot <- function(DT, DTW){
     # pop.tmp.long[, time := rep(seq(1, ncol(pop.tmp)-1), each = 3)]
     pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)]), each = 3)]
     
-    p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1.25) + geom_point(size = 4) + theme_bw()
+    p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1., alpha = 0.35) 
+    p2 <- p2 + geom_point(size = 4) + theme_bw()
     p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
     p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
     p2 <- p2 + commonTheme
@@ -386,7 +387,8 @@ trendPlot2 <- function(DT, DTW){
     # the second participant
     pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)][-1]), each = 3)]
     
-    p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1.25) + geom_point(size = 4) + theme_bw()
+    p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1., alpha = 0.35) 
+    p2 <- p2 + geom_point(size = 4) + theme_bw()
     p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
     p2 <- p2 + ggtitle("Trend of Recovery Over Time\n")
     p2 <- p2 + commonTheme
