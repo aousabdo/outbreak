@@ -6,19 +6,25 @@ library(RJDBC)
 library(RColorBrewer)
 library(scales)
 library(gridExtra)
+library(rjson)
 
 #---------------------------------------------------------------------------------------------------------------------#
 # function to read data from database
 fetchDB <- function(dbTable, hoursNMax){
-  #Establish connection to Vertica DB
-  # this is the local connection configuration
-  BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="C:/Users/abdoa/Downloads/vertica-jdbc-7.1.1-0.jar")
-  himss <- dbConnect(BDDE_himss, "jdbc:vertica://localhost/BDDE_himss", username = dbTable, password = "vertica")
+  # Establish connection to Vertica DB
+  # get IP address to figure our which connection to use
+  myIP <- fromJSON(readLines("http://api.hostip.info/get_json.php", warn=F))$ip
   
-  # this is the server connection configuration
-  # BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="~shiny2/vertica-jdbc-7.1.1-0.jar")
-  # himss <- dbConnect(BDDE_himss, "jdbc:vertica://206.164.65.108/BDDE_himss", username = dbTable, password = "vertica")
-  
+  if(myIP != "15.126.252.31"){
+    # this is the local connection configuration
+    BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="C:/Users/abdoa/Downloads/vertica-jdbc-7.1.1-0.jar")
+    himss <- dbConnect(BDDE_himss, "jdbc:vertica://localhost/BDDE_himss", username = dbTable, password = "vertica")
+  }
+  else{
+    # this is the server connection configuration
+    BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="~shiny2/vertica-jdbc-7.1.1-0.jar")
+    himss <- dbConnect(BDDE_himss, "jdbc:vertica://206.164.65.108/BDDE_himss", username = dbTable, password = "vertica")
+  }
   # read snapshot health status table as a data.tble
   # DT <- fetch(dbSendQuery(himss, "SELECT * FROM health_status_snapshot WHERE participant_id >= 0"), n = -1)
   
