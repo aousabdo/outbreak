@@ -17,6 +17,8 @@ shinyUI(fluidPage(
         br(),
         selectInput("lapse", "Animation lapse time in hours", choices = c(1, 2, 6, 12), selected = 1),
         tags$hr(),
+        checkboxInput("dayTimeOnlyBox", "Only show day-time events", value = TRUE),
+        tags$hr(),
         checkboxInput("daysCheckBox", label = "Select Days to Display", value = FALSE),
         conditionalPanel(condition = "input.daysCheckBox",
                          uiOutput("daysControl"))

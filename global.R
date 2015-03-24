@@ -25,30 +25,19 @@ fetchDB <- function(dbTable, startDate = '2015-01-01', endDate = '2015-12-31'){
     BDDE_himss <- JDBC(driverClass="com.vertica.jdbc.Driver", classPath="~shiny2/vertica-jdbc-7.1.1-0.jar")
     himss <- dbConnect(BDDE_himss, "jdbc:vertica://206.164.65.108/BDDE_himss", username = dbTable, password = "vertica")
   }
-  # read snapshot health status table as a data.tble
-  # DT <- fetch(dbSendQuery(himss, "SELECT * FROM health_status_snapshot WHERE participant_id >= 0"), n = -1)
-  
+  # buile query
   query <- sprintf("
                    SELECT hss.* 
                    FROM health_status_snapshot hss 
                    INNER JOIN participant p 
                    ON p.participant_id = hss.participant_id
-                   WHERE DATE(hss.health_status_snapshot_date) > \'%s\' AND DATE(hss.health_status_snapshot_date) < \'%s\'
+                   WHERE DATE(hss.health_status_snapshot_date) > \'%s\' AND DATE(hss.health_status_snapshot_date) < \'%s\' AND p.participant_id != 9999
                    --AND p.beacon_id IS NOT NULL
                    AND p.email IS NOT NULL
                    ", startDate, endDate)
   
-  
+  # read snapshot health status table as a data.tble
   DT <- fetch(dbSendQuery(himss, query), n = -1)
-#   DT <- fetch(dbSendQuery(himss, "
-#                                   SELECT hss.* 
-#                                   FROM health_status_snapshot hss 
-#                                   INNER JOIN participant p 
-#                                   ON p.participant_id = hss.participant_id
-#                                   WHERE DATE(hss.health_status_snapshot_date) < '2015-03-21'
-#                                   --AND p.beacon_id IS NOT NULL
-#                                   AND p.email IS NOT NULL
-#                                   "), n = -1)
   
   # disconnect from DB
   dbDisconnect(himss)
@@ -58,7 +47,7 @@ fetchDB <- function(dbTable, startDate = '2015-01-01', endDate = '2015-12-31'){
   
   # set data.table key for speed
   setkey(DT, health_status_snapshot_date)
-
+  
   return(DT)
 }
 #---------------------------------------------------------------------------------------------------------------------#
@@ -499,7 +488,7 @@ dayTimeOnlyFun <- function(DT, days = NULL, dayStart = 8, dayEnd = 20){
   
   condition <- condition[!is.na(condition)]
   finalCondition <<- paste(condition, collapse = " | ")
-
+  
   # apply conditions to data.table
   value <- DT[eval(parse(text = finalCondition))]
   return(value)
