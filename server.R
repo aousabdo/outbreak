@@ -15,7 +15,7 @@ shinyServer(function(input, output) {
   
   # read database and create HS table
   dbDT <- reactive({
-    DT <- fetchDB('himss_test', startDate = '2015-03-18', endDate = '2015-03-21')
+    DT <- fetchDB('himss_test', startDate = '2015-03-18', endDate = '2015-03-20')
     if(input$dayTimeOnlyBox) DT <- dayTimeOnlyFun(DT, dayStart = 8, dayEnd = 21)
     return(DT)
   })

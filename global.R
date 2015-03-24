@@ -31,7 +31,7 @@ fetchDB <- function(dbTable, startDate = '2015-01-01', endDate = '2015-12-31'){
                    FROM health_status_snapshot hss 
                    INNER JOIN participant p 
                    ON p.participant_id = hss.participant_id
-                   WHERE DATE(hss.health_status_snapshot_date) > \'%s\' AND DATE(hss.health_status_snapshot_date) < \'%s\' AND p.participant_id != 9999
+                   WHERE DATE(hss.health_status_snapshot_date) >= \'%s\' AND DATE(hss.health_status_snapshot_date) <= \'%s\' AND p.participant_id != 9999
                    --AND p.beacon_id IS NOT NULL
                    AND p.email IS NOT NULL
                    ", startDate, endDate)
@@ -286,7 +286,7 @@ makePlot <- function(DT, DTW, level = 1){
     
     p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
                                labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
-                               values = c("Healthy" = "#0096D6", "Symptomatic" = "#FBD4C0", "Infectious" = "#F05332"))
+                               values = c("Healthy" = "#0096D6", "Symptomatic" = "#FAAD9E", "Infectious" = "#990026"))
     
     label <- as.POSIXct(DT[, unique(health_status_snapshot_date)])[level]
 
@@ -316,7 +316,7 @@ linePlot <- function(DT, DTW){
 #     pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
 #                                  aes(fill = variable), alpha = 0.115, lty = 2) 
     pline <- pline + scale_color_manual(name = "", breaks = paste0('HS.', 1:6),
-                                        values = c("#000FD6", "#59BBE4", "#FBD4C0", "#F7A998", "#F4836C", "#F05332"), 
+                                        values = c( "#70D4FF", "#0096D6", "#FAAD9E", "#F44B2A", "#990026", "#66001A"), 
                                         labels = paste0('Health Status ', 1:6, ' '))
     # now get rid of the other legend
     pline <- pline + scale_fill_manual(name = "", breaks = paste0('HS.', 1:6),
@@ -359,7 +359,7 @@ trendPlot <- function(DT, DTW){
     p2 <- p2 + commonTheme
     p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
                                    labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
-                                   values = c("Healthy" = "#0096D6", "Symptomatic" = "#FBD4C0", "Infectious" = "#F05332"))
+                                   values = c("Healthy" = "#0096D6", "Symptomatic" = "#FAAD9E", "Infectious" = "#990026"))
     print(p2)
   }
 }
