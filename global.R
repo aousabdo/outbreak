@@ -10,7 +10,7 @@ library(rjson)
 
 #---------------------------------------------------------------------------------------------------------------------#
 # function to read data from database
-fetchDB <- function(dbTable, hoursNMax){
+fetchDB <- function(dbTable, startDate = '2015-01-01', endDate = '2015-12-31'){
   # Establish connection to Vertica DB
   # get IP address to figure our which connection to use
   myIP <- fromJSON(readLines("http://api.hostip.info/get_json.php", warn=F))$ip
@@ -28,14 +28,27 @@ fetchDB <- function(dbTable, hoursNMax){
   # read snapshot health status table as a data.tble
   # DT <- fetch(dbSendQuery(himss, "SELECT * FROM health_status_snapshot WHERE participant_id >= 0"), n = -1)
   
-  DT <- fetch(dbSendQuery(himss, "
-                                  SELECT hss.* 
-                                  FROM health_status_snapshot hss 
-                                  INNER JOIN participant p 
-                                  ON p.participant_id = hss.participant_id
-                                  AND p.beacon_id IS NOT NULL
-                                  --AND p.email IS NOT NULL
-                                  "), n = -1)
+  query <- sprintf("
+                   SELECT hss.* 
+                   FROM health_status_snapshot hss 
+                   INNER JOIN participant p 
+                   ON p.participant_id = hss.participant_id
+                   WHERE DATE(hss.health_status_snapshot_date) > \'%s\' AND DATE(hss.health_status_snapshot_date) < \'%s\'
+                   --AND p.beacon_id IS NOT NULL
+                   AND p.email IS NOT NULL
+                   ", startDate, endDate)
+  
+  
+  DT <- fetch(dbSendQuery(himss, query), n = -1)
+#   DT <- fetch(dbSendQuery(himss, "
+#                                   SELECT hss.* 
+#                                   FROM health_status_snapshot hss 
+#                                   INNER JOIN participant p 
+#                                   ON p.participant_id = hss.participant_id
+#                                   WHERE DATE(hss.health_status_snapshot_date) < '2015-03-21'
+#                                   --AND p.beacon_id IS NOT NULL
+#                                   AND p.email IS NOT NULL
+#                                   "), n = -1)
   
   # disconnect from DB
   dbDisconnect(himss)
@@ -45,10 +58,7 @@ fetchDB <- function(dbTable, hoursNMax){
   
   # set data.table key for speed
   setkey(DT, health_status_snapshot_date)
-  
-  # Nunique <- DT[,length(unique(health_status_snapshot_date))]
-  # DT <- DT[unique(health_status_snapshot_date)[(Nunique - (hoursNMax -1)):Nunique]]
-  
+
   return(DT)
 }
 #---------------------------------------------------------------------------------------------------------------------#
