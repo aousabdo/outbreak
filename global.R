@@ -36,7 +36,7 @@ fetchDB <- function(dbTable, startDate = '2015-01-01', endDate = '2015-12-31'){
                    AND p.email IS NOT NULL
                    ", startDate, endDate)
   
-  # read snapshot health status table as a data.tble
+  
   DT <- fetch(dbSendQuery(himss, query), n = -1)
   
   # disconnect from DB
@@ -312,9 +312,9 @@ linePlot <- function(DT, DTW){
     trend[, time := as.POSIXct(DT[, unique(health_status_snapshot_date)])]
     
     pline <- ggplot(trend, aes(x = time, y = value, col = variable)) + geom_point() + geom_line(alpha = 0.35) + theme_bw()
-    pline <- pline + theme(legend.position = "bottom") + xlab("\nTime (Hours)") + ylab("Count")
-    pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
-                                 aes(fill = variable), alpha = 0.115, lty = 2) + facet_wrap(~ variable)
+    pline <- pline + theme(legend.position = "bottom") + xlab("\nTime (Hours)") + ylab("Count") + facet_wrap(~ variable)
+#     pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
+#                                  aes(fill = variable), alpha = 0.115, lty = 2) 
     pline <- pline + scale_color_manual(name = "", breaks = paste0('HS.', 1:6),
                                         values = c("#30AC30", "#217821", "#FFCC00", "#cca300", "#FF3030", "#661313"), 
                                         labels = paste0('Health Status ', 1:6, ' '))
@@ -487,7 +487,7 @@ dayTimeOnlyFun <- function(DT, days = NULL, dayStart = 8, dayEnd = 20){
   }
   
   condition <- condition[!is.na(condition)]
-  finalCondition <<- paste(condition, collapse = " | ")
+  finalCondition <- paste(condition, collapse = " | ")
   
   # apply conditions to data.table
   value <- DT[eval(parse(text = finalCondition))]
