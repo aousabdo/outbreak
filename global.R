@@ -28,12 +28,14 @@ fetchDB <- function(dbTable, hoursNMax){
   # read snapshot health status table as a data.tble
   # DT <- fetch(dbSendQuery(himss, "SELECT * FROM health_status_snapshot WHERE participant_id >= 0"), n = -1)
   
-  DT <- fetch(dbSendQuery(himss, "SELECT hss.* 
+  DT <- fetch(dbSendQuery(himss, "
+                                  SELECT hss.* 
                                   FROM health_status_snapshot hss 
                                   INNER JOIN participant p 
                                   ON p.participant_id = hss.participant_id
-                                  --AND p.beacon_id IS NOT NULL
-                                  AND p.email IS NOT NULL"), n = -1)
+                                  AND p.beacon_id IS NOT NULL
+                                  --AND p.email IS NOT NULL
+                                  "), n = -1)
   
   # disconnect from DB
   dbDisconnect(himss)
@@ -440,7 +442,7 @@ f_dowle3 = function(DT) {
 }
 #---------------------------------------------------------------------------------------------------------------------#
 
-selectDT <- function(DT, day = NULL){
+selectDT <- function(DT, day = NULL, dayTimeOnly = TRUE){
   if(is.null(day)){
     days <- unique(grep("2015", unlist(strsplit(DT[1:nrow(DT), health_status_snapshot_date], split = " ")), value = T))
     DT.tmp <- DT[like(health_status_snapshot_date, paste(days, collapse = "|"))]
@@ -450,6 +452,49 @@ selectDT <- function(DT, day = NULL){
   }
   return(DT.tmp)
 }
+
+# function to select day time only events
+dayTimeOnlyFun <- function(DT, days = NULL, dayStart = 8, dayEnd = 20){
+  # get days if null is input
+  if(is.null(days)) {
+    days <- unique(grep("2015", unlist(strsplit(DT[1:nrow(DT), health_status_snapshot_date], split = " ")), value = T))
+  }
+  
+  # temporary vectors to hold list of days and hours
+  v1 <- vector(length = length(days))
+  v2 <- vector(length = length(days))
+  
+  for (i in seq_along(days)) {
+    v1[i] <- paste(paste0("\'", days[i]), paste0(formatC(as.numeric(dayStart),width=2,format='f',digits=0,flag='0'), ":00:00\'"))
+    v2[i] <- paste(paste0("\'", days[i]), paste0(formatC(as.numeric(dayEnd),width=2,format='f',digits=0,flag='0'), ":00:00\'"))
+  }
+  
+  # temporary data.table to hold list 
+  # the following step is necessary for interleaving the two vectors
+  idx <- order(c(seq_along(v1), seq_along(v2)))
+  tmp.DT <- data.table(time = unlist(c(v1, v2))[idx], day = c(1,0))
+  tmp.DT[, condition := as.character(paste("health_status_snapshot_date",">", time))]
+  tmp.DT[day == 0 , condition := as.character(paste("health_status_snapshot_date","<", time))]
+  
+  # delete columns no longer needed
+  tmp.DT[, c("time", "day") := NULL]
+  
+  # temporary vector to contain conditions
+  condition <- vector()
+  
+  # build conditions
+  for(i in seq(1, nrow(tmp.DT), 2) ){
+    condition[i] <- paste(tmp.DT[i], '&', tmp.DT[i+1])
+  }
+  
+  condition <- condition[!is.na(condition)]
+  finalCondition <<- paste(condition, collapse = " | ")
+
+  # apply conditions to data.table
+  value <- DT[eval(parse(text = finalCondition))]
+  return(value)
+}
+
 
 #---------------------------------------------------------------------------------------------------------------------#
 # common theme for the ggplots
