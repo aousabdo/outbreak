@@ -260,13 +260,13 @@ makePlot <- function(DT, DTW, level = 1){
     Level <- paste('level', level, sep=".")
     Change <- paste('change', level , level-1 , sep="_")
     
-    p <- ggplot(population, aes(x = x, y = y))
+    p <- ggplot(population, aes(x = x, y = y)) + theme_bw()
     p <- p + geom_point(aes_string(fill = Level), shape = 21, size = 12, col = "white") 
     if(level >= 2){
       # here we add the circles Bo wanted
       # make sure legned is not displayed, this is done with the guide = FALSE line
       p <- p + geom_point(shape = 0, aes_string(col = Change), size = 14)
-      p <- p + scale_color_manual(values=c("Recovery" = "black","Sicker" = "#F0F0F0","Steady" = "#F0F0F0"), guide = FALSE)
+      p <- p + scale_color_manual(values=c("Recovery" = "black","Sicker" = "white","Steady" = "white"), guide = FALSE)
     }
     
     p <- p + theme(axis.line=element_blank(),
@@ -276,8 +276,9 @@ makePlot <- function(DT, DTW, level = 1){
                    axis.title.x=element_blank(),
                    axis.title.y=element_blank(),
                    legend.position="bottom",
+                   legend.key = element_blank(),
                    panel.grid.major=element_blank(),
-                   panel.background = element_rect(fill = "#F0F0F0", colour = "grey50", size = 2),
+                   panel.background = element_rect(fill = "white", colour = "grey50", size = 2),
                    panel.grid.minor=element_blank(),
                    legend.title = element_text(colour="black", size=16, face="bold"),
                    legend.text = element_text(colour="black", size = 16, face = "bold")
@@ -285,11 +286,10 @@ makePlot <- function(DT, DTW, level = 1){
     
     p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
                                labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
-                               values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
+                               values = c("Healthy" = "#0096D6", "Symptomatic" = "#FBD4C0", "Infectious" = "#F05332"))
     
     label <- as.POSIXct(DT[, unique(health_status_snapshot_date)])[level]
-    
-    # p <- p + annotate("text", x = 3, y = 6.5, label = as.character(label), size = 8, col = "steelblue")
+
     p <- arrangeGrob(p, sub = textGrob(as.character(label), x = 0, hjust = -0.1, vjust=0.1, 
                                        gp = gpar(fontface = "italic", fontsize = 20)))
     
@@ -316,7 +316,7 @@ linePlot <- function(DT, DTW){
 #     pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
 #                                  aes(fill = variable), alpha = 0.115, lty = 2) 
     pline <- pline + scale_color_manual(name = "", breaks = paste0('HS.', 1:6),
-                                        values = c("#30AC30", "#217821", "#FFCC00", "#cca300", "#FF3030", "#661313"), 
+                                        values = c("#000FD6", "#59BBE4", "#FBD4C0", "#F7A998", "#F4836C", "#F05332"), 
                                         labels = paste0('Health Status ', 1:6, ' '))
     # now get rid of the other legend
     pline <- pline + scale_fill_manual(name = "", breaks = paste0('HS.', 1:6),
@@ -359,7 +359,7 @@ trendPlot <- function(DT, DTW){
     p2 <- p2 + commonTheme
     p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
                                    labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
-                                   values = c("Healthy" = "#30AC30", "Symptomatic" = "#FFCC00", "Infectious" = "#FF3030"))
+                                   values = c("Healthy" = "#0096D6", "Symptomatic" = "#FBD4C0", "Infectious" = "#F05332"))
     print(p2)
   }
 }
@@ -395,7 +395,7 @@ trendPlot2 <- function(DT, DTW){
     p2 <- p2 + commonTheme
     p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Recovery", "Sicker", "Steady"),
                                    labels = c("Recovered ", "Got Sicker ", "No Change in Health Status "),
-                                   values = c("Recovery" = "steelblue", "Sicker" = "darkblue", "Steady" = "gray"))
+                                   values = c("Recovery" = "#0096D6", "Sicker" = "#822980", "Steady" = "#87898B"))
     print(p2)
   }
 }
