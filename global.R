@@ -54,13 +54,17 @@ fetchDB <- function(dbTable, startDate = '2015-01-01', endDate = '2015-12-31'){
 
 #---------------------------------------------------------------------------------------------------------------------#
 # function to process data.table read from Vertica DB
-processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP, pDN){
+processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP = 0.5, pDN = 0.2){
   # the simulate parameter should be invoked if no health status updates occur as time passes
   # make a copy of the data.table to process
   DT.tmp <- copy(DT)
   
   # remove unwanted columns
   DT.tmp[, c("health_status_timestamp", "time_recorded", "reason_changed", "synthesized") := NULL]
+  
+  # set health status to NA if "is_active" flag is false. 
+  # these values will be reset to 0 with the f_dowle3 function
+  # DT.tmp[ is_active == "f", health_status_ref_id := NA]
   
   # simulate data if prompted
   if(simulate){
@@ -428,14 +432,9 @@ summaryFun2 <- function(x){
 #---------------------------------------------------------------------------------------------------------------------#
 
 #---------------------------------------------------------------------------------------------------------------------#
+# function to reset NAs in data.table to 0 values. 
+# Taken from Matt Dowle <http://stackoverflow.com/questions/7235657/fastest-way-to-replace-nas-in-a-large-data-table>
 f_dowle3 = function(DT) {
-  # either of the following for loops
-  
-  #   # by name :
-  #   for (j in names(DT))
-  #     set(DT,which(is.na(DT[[j]])),j,0)
-  
-  # or by number (slightly faster than by name) :
   for (j in seq_len(ncol(DT)))
     set(DT, which(is.na(DT[[j]])), j, 0)
 }
