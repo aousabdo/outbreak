@@ -10,13 +10,12 @@ shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
       wellPanel(
-        # selectInput('last', 'Show the most recent hours:', choices = c(6, 12, 24, 36, 48, 72), selected = 24),
-        # br(),
         helpText(HTML("<p> <font color=\"black\" size = 3>  Disease Outbreak Animation </font> </p> <hr>")),
         uiOutput("hoursControl"),
         br(),
-        selectInput("lapse", "Animation lapse time in hours", choices = c(1, 2, 6, 12), selected = 1),
-        tags$hr(),
+        selectInput("lapse", "Animation lapse time in hours", choices = c(1, 2, 6, 12), selected = 1)),
+      wellPanel(
+        helpText(HTML("<p> <font color=\"black\" size = 3>  Date and Time Selection </font> </p> <hr>")),
         checkboxInput("dayTimeOnlyBox", "Only show day-time events", value = TRUE),
         tags$hr(),
         checkboxInput("daysCheckBox", label = "Select Days to Display", value = FALSE),
