@@ -12,9 +12,10 @@ shinyUI(fluidPage(
       wellPanel(
         helpText(HTML("<p> <font color=\"black\" size = 3>  Disease Outbreak Animation </font> </p> <hr>")),
         uiOutput("hoursControl"),
-        br(),
+        tags$hr(),
         selectInput("lapse", "Animation lapse time in hours", choices = c(1, 2, 6, 12), selected = 1)),
       wellPanel(
+        # uiOutput("dateRangeControl"),
         helpText(HTML("<p> <font color=\"black\" size = 3>  Date and Time Selection </font> </p> <hr>")),
         checkboxInput("dayTimeOnlyBox", "Only show day-time events", value = TRUE),
         tags$hr(),
