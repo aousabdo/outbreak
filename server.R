@@ -12,10 +12,10 @@ shinyServer(function(input, output) {
     
     return(population)
   })
-  
+
   # read database and create HS table
   dbDT <- reactive({
-    DT <- fetchDB('himss_test', startDate = '2015-03-26', endDate = '2015-03-29')
+    DT <- fetchDB('himss_test', startDate = '2015-03-18', endDate = '2015-03-21')
     if(input$dayTimeOnlyBox) DT <- dayTimeOnlyFun(DT, dayStart = 8, dayEnd = 21)
     return(DT)
   })
@@ -36,7 +36,7 @@ shinyServer(function(input, output) {
     if (is.null(input$hours))
       return(NULL)
     makePlot(DT = dbDTFinal(), DTW = DTProcessed(), level = input$hours)
-    
+    # foo <<- input$dateRange[1]
   })
   
   output$linePlot <- renderPlot({
@@ -62,4 +62,14 @@ shinyServer(function(input, output) {
     days <- unique(grep("2015", unlist(strsplit(DT[1:nrow(DT), health_status_snapshot_date], split = " ")), value = T))
     selectInput("days",label = "Select Days to Display", choices = days)
   })
+  
+#   output$dateRangeControl <- renderUI({
+#     DT <- dbDT()
+#     days <- unique(grep("2015", unlist(strsplit(DT[1:nrow(DT), health_status_snapshot_date], split = " ")), value = T))
+#     dateRangeInput('dateRange',
+#                    label = "Date Range",
+#                    start = days[1], end = days[length(days)],
+#                    min = days[1], max = days[length(days)]
+#     )
+#   })
 })
