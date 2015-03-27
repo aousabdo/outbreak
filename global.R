@@ -313,7 +313,7 @@ makePlot <- function(DT, DTW, level = 1){
     
     p <- p + scale_fill_manual(name  = "", breaks = c("Inactive", "Healthy", "Symptomatic", "Infectious"),
                                labels =  c("Inactive ", "Healthy  ", "Symptomatic  ", "Infectious  "),
-                               values = c("Inactive" = "#D9EFF9", "Healthy" = "#0096D6", 
+                               values = c("Inactive" = "#C2E6F5", "Healthy" = "#0096D6", 
                                           "Symptomatic" = "#FAAD9E", "Infectious" = "#990026"))
     
     label <- as.POSIXct(DT[, unique(health_status_snapshot_date)])[level]
@@ -341,8 +341,8 @@ linePlot <- function(DT, DTW){
     
     pline <- ggplot(trend, aes(x = time, y = value, col = variable)) + geom_point() + geom_line(alpha = 0.35) + theme_bw()
     pline <- pline + theme(legend.position = "bottom") + xlab("\nTime (Hours)") + ylab("Count") + facet_wrap(~ variable)
-    #     pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
-    #                                  aes(fill = variable), alpha = 0.115, lty = 2) 
+    pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
+                                 aes(fill = variable), alpha = 0.115, lty = 2) 
     pline <- pline + scale_color_manual(name = "", breaks = paste0('HS.', 1:6),
                                         values = c( "#70D4FF", "#0096D6", "#FAAD9E", "#F44B2A", "#990026", "#66001A"), 
                                         labels = paste0('Health Status ', 1:6, ' '))
@@ -386,7 +386,7 @@ trendPlot <- function(DT, DTW){
     p2 <- p2 + commonTheme
     p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Inactive", "Healthy", "Symptomatic", "Infectious"),
                                    labels =  c("Inactive ", "Healthy  ", "Symptomatic  ", "Infectious  "),
-                                   values = c("Inactive" = "#D9EFF9", "Healthy" = "#0096D6", 
+                                   values = c("Inactive" = "#C2E6F5", "Healthy" = "#0096D6", 
                                               "Symptomatic" = "#FAAD9E", "Infectious" = "#990026"))
     print(p2)
   }
@@ -423,7 +423,7 @@ trendPlot2 <- function(DT, DTW){
     p2 <- p2 + commonTheme
     p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Inactive", "Recovery", "Sicker", "Steady"),
                                    labels = c("Inactive", "Recovered ", "Got Sicker ", "No Change in Health Status "),
-                                   values = c("Inactive" = "#D9EFF9", "Recovery" = "#0096D6", "Sicker" = "#822980", "Steady" = "#87898B"))
+                                   values = c("Inactive" = "#C2E6F5", "Recovery" = "#0096D6", "Sicker" = "#822980", "Steady" = "#87898B"))
     print(p2)
   }
 }
