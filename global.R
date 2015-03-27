@@ -64,7 +64,7 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP = 0.5, pDN = 0.2){
   
   # set health status to NA if "is_active" flag is false. 
   # these values will be reset to 0 with the f_dowle3 function
-  # DT.tmp[ is_active == "f", health_status_ref_id := NA]
+  DT.tmp[ is_active == "f", health_status_ref_id := NA]
   
   # simulate data if prompted
   if(simulate){
@@ -77,7 +77,7 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP = 0.5, pDN = 0.2){
     
     # data.table to contain wide format for plots    
     DTW <- data.table(participant_id = DT.tmp[, unique(participant_id)], HS.1 = sample(x = dist, size = Npop, replace = T))
-    DTW[, level.1 := as.factor(sapply(HS.1, bucket))]
+    DTW[, level.1 := as.factor(sapply(HS.1, bucket2))]
     set.seed(123)
     for(i in 2:iter){
       one <- paste0("HS.",i)
@@ -86,7 +86,9 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP = 0.5, pDN = 0.2){
       four <- paste("change", i, i-1, sep = "_")
       DTW[, as.character(one) := sapply(eval(parse(text=two)), change, p_up = pUP, p_dn = pDN)]
       DTW[, as.character(four) := as.factor(sapply(diag(outer(eval(parse(text = one)), eval(parse(text= two)), "-")), factorize))]
-      DTW[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket))]
+      DTW[(eval(parse(text = two)) == 0 & eval(parse(text = one)) == 0) | 
+            (eval(parse(text = two)) == 0 & eval(parse(text = one)) > 0), as.character(four) := "Inactive"]
+      DTW[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket2))]
     }
   }
   else{
@@ -99,7 +101,7 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP = 0.5, pDN = 0.2){
     
     f_dowle3(DTW)
     
-    DTW[, level.1 := as.factor(sapply(HS.1, bucket))]
+    DTW[, level.1 := as.factor(sapply(HS.1, bucket2))]
     # now add new calculated columns necessary for the visualization
     for(i in 2:(ncol(DTW)-2)){
       one <- paste0("HS.",i)
@@ -107,7 +109,9 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP = 0.5, pDN = 0.2){
       three <- paste0("level.", i)
       four <- paste("change", i, i-1, sep = "_")
       DTW[, as.character(four) := as.factor(sapply(diag(outer(eval(parse(text = one)), eval(parse(text= two)), "-")), factorize))]
-      DTW[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket))]
+      DTW[(eval(parse(text = two)) == 0 & eval(parse(text = one)) == 0) | 
+            (eval(parse(text = two)) == 0 & eval(parse(text = one)) > 0), as.character(four) := "Inactive"]
+      DTW[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket2))]
     }
   }
   
@@ -125,6 +129,14 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP = 0.5, pDN = 0.2){
 # function to factorize health statuses
 bucket <- function(x){
   if(x<3) HS.level <- "Healthy"
+  else if(x <5) HS.level <- "Symptomatic"
+  else HS.level <- "Infectious"
+  return(HS.level)
+}
+
+bucket2 <- function(x){
+  if(x == 0) HS.level <- "Inactive"
+  else if(0 < x & x < 3) HS.level <- "Healthy"
   else if(x <5) HS.level <- "Symptomatic"
   else HS.level <- "Infectious"
   return(HS.level)
@@ -204,7 +216,8 @@ simPopulation <- function(iter, Npop, pUP, pDN){
     four <- paste("change", i, i-1, sep = "_")
     population[, as.character(one) := sapply(eval(parse(text=two)), change, p_up = pUP, p_dn = pDN)]
     population[, as.character(four) := as.factor(sapply(diag(outer(eval(parse(text = one)), eval(parse(text= two)), "-")), factorize))]
-    # population[, as.character(four) := sapply(eval(parse(text = four)), factorize)]
+    population[(eval(parse(text = two)) == 0 & eval(parse(text = one)) == 0) | 
+                 (eval(parse(text = two)) == 0 & eval(parse(text = one)) > 0), as.character(four) := "Inactive"]
     population[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket))]
   }
   return(population)
@@ -213,6 +226,16 @@ simPopulation <- function(iter, Npop, pUP, pDN){
 
 #---------------------------------------------------------------------------------------------------------------------#
 factorize <- function(x){
+  if(x < 0) value <- "Recovery"
+  else if(x == 0) value <- "Steady"
+  else value <- "Sicker"
+  return(value)
+}
+
+factorize2 <- function(x1, x2){
+  if(x1)
+    sub <- outer(x1, x2, "-")
+  
   if(x < 0) value <- "Recovery"
   else if(x == 0) value <- "Steady"
   else value <- "Sicker"
@@ -288,12 +311,13 @@ makePlot <- function(DT, DTW, level = 1){
                    legend.text = element_text(colour="black", size = 16, face = "bold")
     )
     
-    p <- p + scale_fill_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
-                               labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
-                               values = c("Healthy" = "#0096D6", "Symptomatic" = "#FAAD9E", "Infectious" = "#990026"))
+    p <- p + scale_fill_manual(name  = "", breaks = c("Inactive", "Healthy", "Symptomatic", "Infectious"),
+                               labels =  c("Inactive ", "Healthy  ", "Symptomatic  ", "Infectious  "),
+                               values = c("Inactive" = "#D9EFF9", "Healthy" = "#0096D6", 
+                                          "Symptomatic" = "#FAAD9E", "Infectious" = "#990026"))
     
     label <- as.POSIXct(DT[, unique(health_status_snapshot_date)])[level]
-
+    
     p <- arrangeGrob(p, sub = textGrob(as.character(label), x = 0, hjust = -0.1, vjust=0.1, 
                                        gp = gpar(fontface = "italic", fontsize = 20)))
     
@@ -317,8 +341,8 @@ linePlot <- function(DT, DTW){
     
     pline <- ggplot(trend, aes(x = time, y = value, col = variable)) + geom_point() + geom_line(alpha = 0.35) + theme_bw()
     pline <- pline + theme(legend.position = "bottom") + xlab("\nTime (Hours)") + ylab("Count") + facet_wrap(~ variable)
-#     pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
-#                                  aes(fill = variable), alpha = 0.115, lty = 2) 
+    #     pline <- pline + geom_smooth(method = "lm", se = TRUE, fullrange = TRUE, formula = 'y ~ ns(x, 2)', 
+    #                                  aes(fill = variable), alpha = 0.115, lty = 2) 
     pline <- pline + scale_color_manual(name = "", breaks = paste0('HS.', 1:6),
                                         values = c( "#70D4FF", "#0096D6", "#FAAD9E", "#F44B2A", "#990026", "#66001A"), 
                                         labels = paste0('Health Status ', 1:6, ' '))
@@ -327,7 +351,7 @@ linePlot <- function(DT, DTW){
                                        values = rep(c("#30AC30", "#FFCC00", "#FF3030"), each = 2), 
                                        labels = paste0('HS.', 1:6), guide = FALSE)
     pline <- pline + commonTheme + guides(colour = guide_legend(nrow = 2))
-    pline <- pline + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    pline <- pline + theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.key = element_blank())
     print(pline)
   }
 }
@@ -349,21 +373,21 @@ trendPlot <- function(DT, DTW){
   }
   else{
     pop.tmp <- DTW[, lapply(.SD, summaryFun), .SDcols = DTW[ , grep("level", colnames(DTW)) ]]
-    pop.tmp[, reference := c("Healthy", "Symptomatic", "Infectious")]
+    pop.tmp[, reference := c("Inactive", "Healthy", "Symptomatic", "Infectious")]
     setkey(pop.tmp, reference)
     
     pop.tmp.long <- melt(pop.tmp, id.vars = "reference")
-    # pop.tmp.long[, time := rep(seq(1, ncol(pop.tmp)-1), each = 3)]
-    pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)]), each = 3)]
+    pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)]), each = 4)]
     
     p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1., alpha = 0.35) 
     p2 <- p2 + geom_point(size = 4) + theme_bw()
-    p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
+    p2 <- p2 + theme(legend.position = "bottom", legend.key = element_blank()) + ylab("Count\n") + xlab("\nTime ")
     p2 <- p2 + ggtitle("Trend of Disease Outbreak Over Time\n")
     p2 <- p2 + commonTheme
-    p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Healthy", "Symptomatic", "Infectious"),
-                                   labels =  c("Healthy  ", "Symptomatic  ", "Infectious  "),
-                                   values = c("Healthy" = "#0096D6", "Symptomatic" = "#FAAD9E", "Infectious" = "#990026"))
+    p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Inactive", "Healthy", "Symptomatic", "Infectious"),
+                                   labels =  c("Inactive ", "Healthy  ", "Symptomatic  ", "Infectious  "),
+                                   values = c("Inactive" = "#D9EFF9", "Healthy" = "#0096D6", 
+                                              "Symptomatic" = "#FAAD9E", "Infectious" = "#990026"))
     print(p2)
   }
 }
@@ -382,7 +406,7 @@ trendPlot2 <- function(DT, DTW){
     # apply pre defined summary function to aggregate the change columns
     pop.tmp <- DTW[, lapply(.SD, summaryFun2), .SDcols = DTW[ , grep("change", colnames(DTW)) ]]
     # add column for reference
-    pop.tmp[, reference := as.factor(c("Recovery", "Sicker", "Steady"))]
+    pop.tmp[, reference := as.factor(c("Inactive", "Recovery", "Sicker", "Steady"))]
     setkey(pop.tmp, reference)
     
     # convert into long format
@@ -390,16 +414,16 @@ trendPlot2 <- function(DT, DTW){
     # notice that since the "change" variable is less by 1 compared to the nubmer of participants
     # we have to exclude the first time stamp, i.e. first change starts with the introduction of 
     # the second participant
-    pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)][-1]), each = 3)]
+    pop.tmp.long[, time := rep(as.POSIXct(DT[, unique(health_status_snapshot_date)][-1]), each = 4)]
     
     p2 <- ggplot(pop.tmp.long, aes(x = time, y = value, col = reference)) + geom_line(size = 1., alpha = 0.35) 
     p2 <- p2 + geom_point(size = 4) + theme_bw()
-    p2 <- p2 + theme(legend.position = "bottom") + ylab("Count\n") + xlab("\nTime ")
+    p2 <- p2 + theme(legend.position = "bottom", legend.key = element_blank()) + ylab("Count\n") + xlab("\nTime ")
     p2 <- p2 + ggtitle("Trend of Recovery Over Time\n")
     p2 <- p2 + commonTheme
-    p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Recovery", "Sicker", "Steady"),
-                                   labels = c("Recovered ", "Got Sicker ", "No Change in Health Status "),
-                                   values = c("Recovery" = "#0096D6", "Sicker" = "#822980", "Steady" = "#87898B"))
+    p2 <- p2 +  scale_color_manual(name  = "", breaks = c("Inactive", "Recovery", "Sicker", "Steady"),
+                                   labels = c("Inactive", "Recovered ", "Got Sicker ", "No Change in Health Status "),
+                                   values = c("Inactive" = "#D9EFF9", "Recovery" = "#0096D6", "Sicker" = "#822980", "Steady" = "#87898B"))
     print(p2)
   }
 }
@@ -409,9 +433,11 @@ trendPlot2 <- function(DT, DTW){
 summaryFun <- function(x){
   tmp <- summary(x)
   if(is.na(tmp["Healthy"])){tmp["Healthy"] <- 0}
+  if(is.na(tmp["Inactive"])){tmp["Inactive"] <- 0}
   if(is.na(tmp["Symptomatic"])){tmp["Symptomatic"] <- 0}
   if(is.na(tmp["Infectious"])){tmp["Infectious"] <- 0}
-  tmp <- list("Healthy" = tmp[["Healthy"]],
+  tmp <- list("Inactive" = tmp[["Inactive"]],
+              "Healthy" = tmp[["Healthy"]],
               "Symptomatic" = tmp[["Symptomatic"]],
               "Infectious" = tmp[["Infectious"]]
   )
@@ -420,10 +446,12 @@ summaryFun <- function(x){
 
 summaryFun2 <- function(x){
   tmp <- summary(x)
+  if(is.na(tmp["Inactive"])){tmp["Inactive"] <- 0}
   if(is.na(tmp["Recovery"])){tmp["Recovery"] <- 0}
   if(is.na(tmp["Sicker"])){tmp["Sicker"] <- 0}
   if(is.na(tmp["Steady"])){tmp["Steady"] <- 0}
-  tmp <- list("Recovery" = tmp[["Recovery"]],
+  tmp <- list("Inactive" = tmp[["Inactive"]],
+              "Recovery" = tmp[["Recovery"]],
               "Sicker" = tmp[["Sicker"]],
               "Steady" = tmp[["Steady"]]
   )
