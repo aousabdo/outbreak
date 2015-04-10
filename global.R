@@ -86,8 +86,8 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP = 0.5, pDN = 0.2){
       four <- paste("change", i, i-1, sep = "_")
       DTW[, as.character(one) := sapply(eval(parse(text=two)), change, p_up = pUP, p_dn = pDN)]
       DTW[, as.character(four) := as.factor(sapply(diag(outer(eval(parse(text = one)), eval(parse(text= two)), "-")), factorize))]
-      DTW[(eval(parse(text = two)) == 0 & eval(parse(text = one)) == 0) | 
-            (eval(parse(text = two)) == 0 & eval(parse(text = one)) > 0), as.character(four) := "Inactive"]
+      # if the user is inactive, or becomes inactive then no flag the change in their health status to Inactive
+      DTW[(eval(parse(text = two)) == 0 | eval(parse(text = one)) == 0), as.character(four) := "Inactive"]
       DTW[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket2))]
     }
   }
@@ -109,8 +109,8 @@ processDT <- function(DT, simulate = FALSE, addXY = TRUE, pUP = 0.5, pDN = 0.2){
       three <- paste0("level.", i)
       four <- paste("change", i, i-1, sep = "_")
       DTW[, as.character(four) := as.factor(sapply(diag(outer(eval(parse(text = one)), eval(parse(text= two)), "-")), factorize))]
-      DTW[(eval(parse(text = two)) == 0 & eval(parse(text = one)) == 0) | 
-            (eval(parse(text = two)) == 0 & eval(parse(text = one)) > 0), as.character(four) := "Inactive"]
+      # if the user is inactive, or becomes inactive then no flag the change in their health status to Inactive
+      DTW[(eval(parse(text = two)) == 0 | eval(parse(text = one)) == 0), as.character(four) := "Inactive"]
       DTW[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket2))]
     }
   }
@@ -216,8 +216,8 @@ simPopulation <- function(iter, Npop, pUP, pDN){
     four <- paste("change", i, i-1, sep = "_")
     population[, as.character(one) := sapply(eval(parse(text=two)), change, p_up = pUP, p_dn = pDN)]
     population[, as.character(four) := as.factor(sapply(diag(outer(eval(parse(text = one)), eval(parse(text= two)), "-")), factorize))]
-    population[(eval(parse(text = two)) == 0 & eval(parse(text = one)) == 0) | 
-                 (eval(parse(text = two)) == 0 & eval(parse(text = one)) > 0), as.character(four) := "Inactive"]
+    # if the user is inactive, or becomes inactive then no flag the change in their health status to Inactive
+    population[(eval(parse(text = two)) == 0 | eval(parse(text = one)) == 0), as.character(four) := "Inactive"]
     population[, as.character(three) := as.factor(sapply(eval(parse(text=one)), bucket))]
   }
   return(population)

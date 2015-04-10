@@ -15,7 +15,7 @@ shinyServer(function(input, output) {
 
   # read database and create HS table
   dbDT <- reactive({
-    DT <- fetchDB('himss_test', startDate = '2015-03-18', endDate = '2015-03-21')
+    DT <- fetchDB('himss_live', startDate = '2015-04-01')
     if(input$dayTimeOnlyBox) DT <- dayTimeOnlyFun(DT, dayStart = 8, dayEnd = 21)
     return(DT)
   })
@@ -36,7 +36,6 @@ shinyServer(function(input, output) {
     if (is.null(input$hours))
       return(NULL)
     makePlot(DT = dbDTFinal(), DTW = DTProcessed(), level = input$hours)
-    # foo <<- input$dateRange[1]
   })
   
   output$linePlot <- renderPlot({
